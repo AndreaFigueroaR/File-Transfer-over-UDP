@@ -13,6 +13,9 @@ STORAGE_DOWNLOAD = './storage/download/'
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 9000
 
+SELECTIVE_REPEAT = "sr"
+STOP_AND_WAIT = "sw"
+
 
 def parse_server():
     parser = parser_commons(DESC_SERVER)
@@ -51,8 +54,8 @@ def parser_commons(description: str):
 
 # TODO debe ser excluyente el protocolo de transporte a utilizar
     parser.add_argument("-r", "--protocol",
-                        choices=["stop-and-wait", "selective-repeat"],
-                        default="stop-and-wait",
+                        choices=[SELECTIVE_REPEAT, STOP_AND_WAIT],
+                        default=STOP_AND_WAIT,
                         help="error recovery protocol")
 
     return parser

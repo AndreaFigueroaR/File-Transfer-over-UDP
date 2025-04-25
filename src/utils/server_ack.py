@@ -16,12 +16,13 @@ client_threads = {}     # (ip, port) -> Thread
 client_expected_seq = {}  # (ip, port) -> expected sequence
 lock = threading.Lock()
 
+
 def handle_client(addr, q):
     print(f"durmiendo 20s")
     time.sleep(20)
     print("desperté")
     while True:
-        data = q.get() # probabalemente se cambie
+        data = q.get()  # probabalemente se cambie
         if data is None:
             break  # Por si querés cerrar después
 
@@ -43,23 +44,31 @@ def handle_client(addr, q):
             with lock:
                 client_expected_seq[addr] = 1 - expected
         else:
-            print(f"[{addr}] Duplicado o fuera de orden. Reenviando ACK {1 - expected}")
+            print(
+                f"[{addr}] Duplicado o fuera de orden. Reenviando ACK {1 - expected}")
             sock.sendto(str(1 - expected).encode(), addr)
+
 
 def dispatcher():
     print(f"[+] Servidor escuchando en {HOST}:{PORT}")
     while True:
         data, addr = sock.recvfrom(1024)
+        print(addr)
         with lock:
             if addr not in client_queues:
                 print(f"[+] Servidor aceptó al client con addr {addr}")
                 q = Queue()
                 client_queues[addr] = q
-                client_expected_seq[addr] = 0 # esto creo que debería ser random y se intercanbia en el 3 manos sahcking
-                t = threading.Thread(target=handle_client, args=(addr, q), daemon=True)
+                # esto creo que debería ser random y se intercanbia en el 3
+                # manos sahcking
+                client_expected_seq[addr] = 0
+                t = threading.Thread(
+                    target=handle_client, args=(
+                        addr, q), daemon=True)
                 client_threads[addr] = t
                 t.start()
         client_queues[addr].put(data)
+
 
 if __name__ == "__main__":
     dispatcher()
