@@ -22,23 +22,25 @@ def main():
     run(args)
 
 
-def try_send_first_hand_shake_msg(sock, seq, args):
-    packet = f"{seq}|D|{args.protocol}|{args.name}"
-    print(f"trying to send the packet: {packet}")
+def formated_pkt(seq, args) -> str:
+    return f"{seq}|D|{args.protocol}|{args.name}"
+
+
+def try_send_first_hand_shake_msg(sock, packet):
     sock.sendto(packet.encode(), (parser.SERVER_IP, parser.SERVER_PORT))
     try:
         data_handshake, serv_add = sock.recvfrom(TAM_BUFFER)
     except socket.timeout:
-        try_send_first_hand_shake_msg(sock, seq, args)
+        try_send_first_hand_shake_msg(sock, packet)
         time.sleep(1)
-    #print(data_handshake.decode())
+
     serv_seq, ack = data_handshake.decode().split("|", 1)
     return (serv_seq, ack)
 
 
 def senf_first_hand_shake_msg(sock, seq, args):
     print(f"expecting {seq}")
-    serv_seq, ack = try_send_first_hand_shake_msg(sock, seq, args)
+    serv_seq, ack = try_send_first_hand_shake_msg(sock, formated_pkt(seq, args))
     #threading.Timer
     while int(ack) != seq:
         serv_seq, ack = try_send_first_hand_shake_msg(sock, seq, args)
