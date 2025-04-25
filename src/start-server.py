@@ -19,17 +19,17 @@ def handle_client(data, addr):
     print(response.decode())
     sock_per_client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock_per_client.sendto(response, addr)
+    socket.timeout(TIME_OUT)
     print(f"[SEND] Sent SEQ|ACK to {addr}")
 
     # me re envian el num seq
     # manjear segundo handshake
     try:
-        socket.timeout(TIME_OUT)
-        second_addr, second_data = socket.recvfrom(TAM_BUFFER)
+        client_data, client_addr = sock_per_client.recvfrom(TAM_BUFFER)
         print(
-            f"Segundo mensaje del cliente {second_addr}: {second_data.decode()}")
-        second_seq = second_data.decode().strip()
-        if second_seq == seq:
+            f"Segundo mensaje del cliente {client_addr}: {client_data.decode()}")
+        client_seq = client_data.decode()
+        if int(client_seq) == seq:
             print("Segundo_seq es correcto.")
         else:
             print("Segundo_seq es inccorrecto")
@@ -42,11 +42,12 @@ def run_acceptor(args):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_socket.bind((args.host, args.port))
     print("[INFO] Server is ready to receive...")
-
+    # clients = []
     while True:
         data, addr = server_socket.recvfrom(TAM_BUFFER)
         thread = threading.Thread(target=handle_client, args=(data, addr))
         thread.start()
+        # clients.append() #<- hacer join
 
 
 def main():
