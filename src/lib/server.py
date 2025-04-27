@@ -3,8 +3,8 @@ import threading
 
 from lib.server_rdt import ServerRDT
 
-READ_BINARY = 'rb'
-WRITE_BINARY = 'wb'
+READ_BINARY = "rb"
+WRITE_BINARY = "wb"
 
 TAM_BUFFER = 1024
 UPLOAD = 'U'
@@ -25,8 +25,6 @@ class Server:
     def accept_clients(self):
         while True:
             client_data, client_addr = self.skt_acceptor.recvfrom(TAM_BUFFER)
-            print(
-                f"[INFO] Client {client_addr}: {client_data.decode()} started contact with the server")
             client_thread = threading.Thread(
                 target=self._handle_client, args=(
                     client_data, client_addr))
@@ -46,8 +44,8 @@ class Server:
         try:
             rdt = ServerRDT(client_addr)
             app_data = rdt.meet_client(client_data, self.prot_type)
-            file_path, client_type = app_data.split('|')
-            # self._dispatch_client(file_path, client_type, rdt)
+            file_path, file_name, client_type = app_data.split('|')
+            self._dispatch_client(file_path, file_name, client_type, rdt)
         except ValueError as error:
             print(f"Error meeting client: {error}")
         except ConnectionError as e:
@@ -57,14 +55,14 @@ class Server:
             print(f"Unknown error: {e}")
         if rdt: rdt.stop()
 
-    def _dispatch_client(self, file_path, client_type, rdt):
+    def _dispatch_client(self, file_path, file_name, client_type, rdt):
         if client_type == UPLOAD:
-            self._handle_client_upload(file_path, rdt)
+            self._handle_client_upload(file_name, rdt)
         elif client_type == DOWNLOAD:
             self._handle_client_download(file_path, rdt)
 
-    def _handle_client_upload(self, file_path, rdt):
-        with open(file_path, WRITE_BINARY) as file:
+    def _handle_client_upload(self, file_name, rdt):
+        with open(file_name, WRITE_BINARY) as file:
             self._recv_file(file, rdt)
 
     def _handle_client_download(self, file_path, rdt):
@@ -73,7 +71,7 @@ class Server:
 
     def _recv_file(self, file, rdt):
         while True:
-            data = rdt.receive()
+            data = rdt.receive(CHUNK_SIZE)
             if not data:
                 break
             file.write(data)
