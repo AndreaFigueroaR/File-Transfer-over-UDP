@@ -3,13 +3,14 @@ from lib.handshake.server_handshaker import ServerHandshaker
 from lib.selective_repeat import SelectiveRepeat
 from lib.stop_and_wait import StopAndWait
 
+TIME_OUT = 0.1
 PROT_SR = "sr"
-
 
 class ServerRDT:
     def __init__(self, addr):
         self.client_addr = addr
         self.peer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.peer.settimeout(TIME_OUT)
         self.protocol = None
         self.client_num_seq = None
         self.num_seq = 0
@@ -31,13 +32,13 @@ class ServerRDT:
     def stop(self):
         self.protocol.stop()
 
-    def _check_prot_type(client_prot_type, server_prot_type):
-        if client_prot_type != server_prot_type:
-            raise ValueError(
-                f"Tipo de protocolo inválido: {client_prot_type}. Expected {server_prot_type}")
-
     def _init_protocol(self, prot_type):
         if prot_type == PROT_SR:
             return SelectiveRepeat(
                 self.peer, self.num_seq, self.client_num_seq)
         return StopAndWait(self.peer, self.num_seq, self.client_num_seq)
+
+    def _check_prot_type(self,client_prot_type, server_prot_type):
+        if client_prot_type != server_prot_type:
+            raise ValueError(
+                f"Invalid protocol type: {client_prot_type}. Expected {server_prot_type}")
