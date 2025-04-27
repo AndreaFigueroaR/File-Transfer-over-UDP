@@ -6,14 +6,14 @@ TAM_BUFFER = 1024
 
 class ProtocolARQ:
 
-    def __init__(self, socket_peer, local_seq, remote_seq):
+    def __init__(self, socket_peer, local_seq, remote_seq,remote_adress):
         
-        #self.time_out.settimeout(TIMEOUT)
         self.socket = socket_peer
+        #self.time_out.settimeout(TIMEOUT)
         self.local_seq = local_seq
         self.remote_seq = remote_seq
         # tupla con address y port de con quien me debería de estar comunicando
-        # self.adress = adress
+        self.adress = remote_adress
 
     @abstractmethod
     def _recv_segment():
@@ -24,9 +24,17 @@ class ProtocolARQ:
     # and wait)
 
     @abstractmethod
-    def send():
+    def send(self, data: bytes):
         pass
 
     @abstractmethod
-    def _send_segment():
+    def receive(self, total_size) -> bytearray:
+        pass
+
+    @abstractmethod
+    def _send_segment(self, segment: bytes):
+        pass
+
+    @abstractmethod
+    def stop(self):
         pass
