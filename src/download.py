@@ -2,7 +2,7 @@ from lib.parser import parser
 from lib.client import Client
 
 
-def main(args):
+def main():
     args = parser.parse_download()
     display_mode(args)
 
