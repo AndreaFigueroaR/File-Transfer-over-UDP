@@ -9,7 +9,7 @@ class StopAndWait(ProtocolARQ):
     def send(self, data: bytes):
         print(f"Len data:   {len(data)}")
         if len(data) == 0:
-            #enviando ack de despedida
+            # enviando ack de despedida
             ack = self.remote_seq.to_bytes(1, byteorder='big')
             self.socket.sendto(ack, self.adress)
             self.remote_seq = 1 - self.remote_seq
@@ -60,10 +60,11 @@ class StopAndWait(ProtocolARQ):
                     ack = seq.to_bytes(1, byteorder='big')
                     self.socket.sendto(ack, self.adress)
                     self.remote_seq = 1 - self.remote_seq
-                    if len(payload)<TAM_BUFFER:
+                    if len(payload) < TAM_BUFFER:
                         return buffer
                 else:
-                    print("No existen los erroes. Me verás cuando no uses tu misma ip c:")
+                    print(
+                        "No existen los erroes. Me verás cuando no uses tu misma ip c:")
                     # caso loss: reenviar último paquete
                     ack = (1 - self.remote_seq).to_bytes(1, byteorder='big')
                     self.socket.sendto(ack, self.adress)
