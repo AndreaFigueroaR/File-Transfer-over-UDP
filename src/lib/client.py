@@ -27,7 +27,7 @@ class Client:
             rdt.start(self.prot_type, client_type, file_path)
             self._dispatch_client(file_path, client_type, rdt)
         except ValueError as error:
-            print(f"Error meeting client: {error}")
+            print(f"Error: {error}")
         except Exception as e:
             print(f"Unknown error: {e}")
         if rdt: rdt.stop()

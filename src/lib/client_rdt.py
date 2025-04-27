@@ -5,6 +5,7 @@ from stop_and_wait import StopAndWait
 
 PROT_SR = "sr"
 
+
 class ClientRDT:
     def __init__(self, server_addr):
         self.srv_addr = server_addr
@@ -15,7 +16,8 @@ class ClientRDT:
 
     def start(self, prot_type, client_type, file_path) -> str:
         handshaker = ClientHandshaker(self.srv_addr, self.num_seq)
-        self.srv_num_seq = handshaker.handshake(client_type, prot_type, file_path, self.srv_skt)
+        self.srv_num_seq = handshaker.handshake(
+            client_type, prot_type, file_path, self.srv_skt)
         self.protocol = self._init_protocol(prot_type)
 
     def send(self, data):
@@ -29,5 +31,6 @@ class ClientRDT:
 
     def _init_protocol(self, prot_type):
         if prot_type == PROT_SR:
-            return SelectiveRepeat(self.srv_skt, self.num_seq, self.srv_num_seq)
+            return SelectiveRepeat(
+                self.srv_skt, self.num_seq, self.srv_num_seq)
         return StopAndWait(self.srv_skt, self.num_seq, self.srv_num_seq)

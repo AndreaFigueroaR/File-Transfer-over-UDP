@@ -1,73 +1,49 @@
 import socket
-import time
-from abc import ABC, abstractmethod
 
 TAM_BUFFER = 1024
 TIME_OUT = 0.1
 
-TYPE_CLIENT_DOWNLOAD ='D'
-TYPE_CLIENT_UPLOAD ='U'
+UPLOAD = 'U'
+DOWNLOAD = 'D'
+NUM_ATTEMPS = 10
+
 
 class ClientHandshaker:
-    def __init__(self,args,type_client):
-        self.foreign_addr = (args.host,args.port)
-        self.protocol_type = args.protocol
-        self.file_path = args.name
-        self.num_seq = 0 ##creo que va en client
-        self.serv_seq = None
-        self.type_client = type_client
+    def __init__(self, addr, num_seq):
+        self.srv_addr = addr
+        self.num_seq = num_seq
 
-        if not (self.type_client == TYPE_CLIENT_DOWNLOAD or self.type_client == TYPE_CLIENT_UPLOAD):
-            raise ValueError(f"Tipo de cliente inválido: {self.type_client}")
+    def handshake(self, client_type, client_prot_type, file_path, srv_skt):
+        srv_num_seq = self._send_first_handshake_msg(
+            srv_skt, client_type, client_prot_type, file_path)
+        self._send_second_handshake_msg(srv_skt, srv_num_seq)
+        return srv_num_seq
 
-
-    def send_first_handshake_msg(self,skt):
-        packet = self._formated_first_pkt()
-        self.serv_seq, ack = self._try_first_handshake_msg(skt,packet)
-        while int(ack) != self.num_seq:  # forwarding while its corrupted
-            self.serv_seq, ack =  self._try_first_handshake_msg(skt,packet)
+    def _send_first_handshake_msg(
+            self, srv_skt, client_type, client_prot_type, file_path):
+        packet = self._formatted_client_info(
+            client_type, client_prot_type, file_path)
+        srv_num_seq, ack = self._try_first_handshake_msg(srv_skt, packet)
+        while self.num_seq != int(ack):  # forwarding while its corrupted
+            srv_num_seq, ack = self._try_first_handshake_msg(srv_skt, packet)
             print(
                 f"[Error]: ack received {ack}. Expected{self.num_seq}. Trying to connect the server again")
-        return
+        return srv_num_seq
 
-    # pre: you have be call send_first_handshake_msg before calling this
-    def send_second_handshake_msg(self,skt):
-        skt.sendto(str(self.serv_seq).encode(), self.foreign_addr)
-        return self.num_seq
-    
+    def _send_second_handshake_msg(self, srv_skt, srv_num_seq):
+        srv_skt.sendto(str(srv_num_seq).encode(), self.srv_addr)
 
-    def _try_first_handshake_msg(self, skt, packet):
-        skt.sendto(packet.encode(),self.foreign_addr)
-        try:
-            data_handshake, self.foreign_addr  = skt.recvfrom(TAM_BUFFER)
-        except socket.timeout:
-            self._try_first_handshake_msg(self, skt, packet)
-            time.sleep(1)#TODO: quitar
+    def _try_first_handshake_msg(self, srv_skt, packet):
+        for _ in range(NUM_ATTEMPS):
+            try:
+                srv_skt.sendto(packet.encode(), self.srv_addr)
+                data_handshake, self.srv_addr = srv_skt.recvfrom(TAM_BUFFER)
+            except socket.timeout:
+                continue
+            srv_num_seq, ack = data_handshake.decode().split("|", 1)
+            return srv_num_seq, ack
+        raise ConnectionError("Maximum number of handshake attempts reached")
 
-        serv_seq, ack = data_handshake.decode().split("|", 1)
-        return (serv_seq, ack)
-
-
-    def _formated_first_pkt(self) -> str:
-        return f"{self.num_seq}|{self.type_client}|{self.protocol_type}|{self.file_path}" # por ejemplo 0|D|sr|hola.txt
-
-
-
-
-
-    # @abstractmethod
-    # def upload(self):
-    #     pass
-    
-    # @abstractmethod
-    # def download(self):
-    #     pass
-
-    # @abstractmethod
-    # def recv_segment(self):
-    #     pass
-    
-    # @abstractmethod
-    # #[seq, ack, segment]
-    # def send_segment(self, sock, addr, payload, lenght):
-    #     pass
+    def _formatted_client_info(
+            self, client_type, client_prot_type, file_path) -> str:
+        return f"{self.num_seq}|{client_type}|{client_prot_type}|{file_path}"

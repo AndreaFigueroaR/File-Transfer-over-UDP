@@ -5,6 +5,7 @@ from stop_and_wait import StopAndWait
 
 PROT_SR = "sr"
 
+
 class ServerRDT:
     def __init__(self, addr):
         self.client_addr = addr
@@ -12,7 +13,7 @@ class ServerRDT:
         self.protocol = None
         self.client_num_seq = None
         self.num_seq = 0
-        
+
     def meet_client(self, client_data, server_prot_type) -> str:
         handshaker = ServerHandshaker(self.client_addr, self.num_seq)
         self.client_num_seq, client_prot_type, app_data = handshaker.handshake(
@@ -37,5 +38,6 @@ class ServerRDT:
 
     def _init_protocol(self, prot_type):
         if prot_type == PROT_SR:
-            return SelectiveRepeat(self.peer, self.num_seq, self.client_num_seq)
+            return SelectiveRepeat(
+                self.peer, self.num_seq, self.client_num_seq)
         return StopAndWait(self.peer, self.num_seq, self.client_num_seq)

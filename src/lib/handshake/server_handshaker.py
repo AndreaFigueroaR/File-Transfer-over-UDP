@@ -3,9 +3,9 @@ import socket
 TAM_BUFFER = 1024
 TIME_OUT = 0.1
 
-CANT_ATTEMPS_FOR_SENDING_MSG = 10
-TYPE_PROTOCOL_STOP_ADN_WAIT = 'sw'
-TYPE_PROTOCOL_SELECTIVE_REPEAT = 'sr'
+STOP_ADN_WAIT = 'sw'
+SELECTIVE_REPEAT = 'sr'
+NUM_ATTEMPS = 10
 
 class ServerHandshaker:
     def __init__(self, addr, num_seq):
@@ -27,7 +27,7 @@ class ServerHandshaker:
                 f"[Error]: ack received {ack}. Expected{self.num_seq}. Trying to connect the client again")
 
     def _try_send_handshake_msg(self, skt_peer, packet) -> str:
-        for _ in range(CANT_ATTEMPS_FOR_SENDING_MSG):
+        for _ in range(NUM_ATTEMPS):
             try:
                 skt_peer.sendto(packet, self.client_addr)
                 ack, self.client_addr = skt_peer.recvfrom(TAM_BUFFER)
@@ -41,5 +41,5 @@ class ServerHandshaker:
 
     def _check_type_client(type_prot_client):
         if not (type_prot_client ==
-                TYPE_PROTOCOL_STOP_ADN_WAIT or type_prot_client == TYPE_PROTOCOL_SELECTIVE_REPEAT):
+                STOP_ADN_WAIT or type_prot_client == SELECTIVE_REPEAT):
             raise ValueError(f"[Client] Invalid client protocol type, received: {type_prot_client}. Not a valid selection")
