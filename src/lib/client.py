@@ -5,7 +5,7 @@ DOWNLOAD = 'D'
 
 READ_BINARY = "rb"
 WRITE_BINARY = "wb"
-CHUNK_SIZE = 1024
+CHUNK_SIZE = 1024 
 
 
 class Client:
@@ -41,9 +41,6 @@ class Client:
         elif client_type == DOWNLOAD:
             self._handle_client_download(file_path, rdt)
 
-    def _handle_client_upload(self, file_path, rdt):
-        with open(file_path, READ_BINARY) as file:
-            self._send_file(file, rdt)
 
     def _handle_client_download(self, file_path, rdt):
         with open(file_path, WRITE_BINARY) as file:
@@ -56,10 +53,25 @@ class Client:
             if len(data) != CHUNK_SIZE:
                 break
 
+
+
+    def _handle_client_upload(self, file_path, rdt):
+        with open(file_path, READ_BINARY) as file:
+            self._send_file(file, rdt)
+
+    #def _send_fileANTERIOR(self, file, rdt):
+    #    while True:
+    #        data = file.read(CHUNK_SIZE)
+    #        rdt.send(data)
+    #        if len(data) == 0:
+    #            print("[CLIENT] TERMINA")
+    #            break
+
     def _send_file(self, file, rdt):
         while True:
             data = file.read(CHUNK_SIZE)
-            rdt.send(data)
-            if len(data) == 0:
-                print("[CLIENT] TERMINA")
+            if not data:
                 break
+            rdt.send(data)
+
+    
