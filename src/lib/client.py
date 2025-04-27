@@ -3,8 +3,8 @@ from lib.client_rdt import ClientRDT
 UPLOAD = 'U'
 DOWNLOAD = 'D'
 
-READ_BINARY = 'rb'
-WRITE_BINARY ='wb'
+READ_BINARY = "rb"
+WRITE_BINARY ="wb"
 CHUNK_SIZE = 1024
 
 class Client:
@@ -12,18 +12,18 @@ class Client:
         self.srv_addr = (srv_host, srv_port)
         self.prot_type = protocol
 
-    def upload(self, file_path):
-        self._start(file_path, UPLOAD)
+    def upload(self, file_path, file_name):
+        self._start(file_path, file_name, UPLOAD)
 
-    def download(self, file_path):
-        self._start(file_path, DOWNLOAD)
+    def download(self, file_path, file_name):
+        self._start(file_path, file_name, DOWNLOAD)
 
-    def _start(self, file_path, client_type):
+    def _start(self, file_path, file_name, client_type):
         rdt = None
         try:
             rdt = ClientRDT(self.srv_addr)
-            rdt.start(self.prot_type, client_type, file_path)
-            # self._dispatch_client(file_path, client_type, rdt)
+            rdt.start(self.prot_type, client_type, file_path, file_name)
+            self._dispatch_client(file_path, client_type, rdt)
         except ValueError as error:
             print(f"Error: {error}")
         except ConnectionError as e:
@@ -46,10 +46,10 @@ class Client:
     def _handle_client_download(self, file_path, rdt):
         with open(file_path, WRITE_BINARY) as file:
             self._recv_file(file, rdt)
-
+            
     def _recv_file(self, file, rdt):
         while True:
-            data = rdt.receive()
+            data = rdt.receive(CHUNK_SIZE)
             if not data:
                 break
             file.write(data)
