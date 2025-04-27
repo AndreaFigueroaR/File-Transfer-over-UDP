@@ -8,7 +8,12 @@ class StopAndWait(ProtocolARQ):
     # se recibe cualqueir tamaño
     def send(self, data: bytes):
         print(f"Len data:   {len(data)}")
-
+        if len(data) == 0:
+            #enviando ack de despedida
+            ack = self.remote_seq.to_bytes(1, byteorder='big')
+            self.socket.sendto(ack, self.adress)
+            self.remote_seq = 1 - self.remote_seq
+            return
         for i in range(0, len(data), TAM_BUFFER):
             # TODO: Verificar que no rompe si no se cumple con el TAM_BUFFER
             segment = data[i:i + TAM_BUFFER]
