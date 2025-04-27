@@ -26,8 +26,8 @@ class ServerRDT:
     def send(self, data):
         self.protocol.send(data)
 
-    def receive(self):
-        return self.protocol.recieve()
+    def receive(self, sz)-> bytearray:
+        return self.protocol.receive(sz)
 
     def stop(self):
         self.protocol.stop()
@@ -35,8 +35,8 @@ class ServerRDT:
     def _init_protocol(self, prot_type):
         if prot_type == PROT_SR:
             return SelectiveRepeat(
-                self.peer, self.num_seq, self.client_num_seq)
-        return StopAndWait(self.peer, self.num_seq, self.client_num_seq)
+                self.peer, self.num_seq, self.client_num_seq, self.client_addr)
+        return StopAndWait(self.peer, self.num_seq, self.client_num_seq, self.client_addr)
 
     def _check_prot_type(self,client_prot_type, server_prot_type):
         if client_prot_type != server_prot_type:
