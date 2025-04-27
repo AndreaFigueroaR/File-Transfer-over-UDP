@@ -7,7 +7,7 @@ def main():
     display_mode(args)
 
     client = Client(args.host, args.port, args.protocol)
-    client.download(args.src)
+    client.download(args.src, args.name)
 
 
 def display_mode(args):
