@@ -70,8 +70,9 @@ class Client:
     def _send_file(self, file, rdt):
         while True:
             data = file.read(CHUNK_SIZE)
+            rdt.send(data)
             if not data:
                 break
-            rdt.send(data)
+            
 
     
