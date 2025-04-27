@@ -23,7 +23,6 @@ class Server:
         self.clients = {}
 
     def accept_clients(self):
-        print("[INFO] Server is ready to receive...")
         while True:
             client_data, client_addr = self.skt_acceptor.recvfrom(TAM_BUFFER)
             print(
@@ -43,22 +42,20 @@ class Server:
                 del self.clients[client_addr]
 
     def _handle_client(self, client_data, client_addr):
-        print("ATENDIENDO A UN CLIENT:")
         rdt = None
         try:
             rdt = ServerRDT(client_addr)
             app_data = rdt.meet_client(client_data, self.prot_type)
-            #file_path, client_type = app_data.split('|')
-            print(f"{app_data}")
-            #self._dispatch_client(file_path, client_type, rdt)
+            file_path, client_type = app_data.split('|')
+            # self._dispatch_client(file_path, client_type, rdt)
         except ValueError as error:
             print(f"Error meeting client: {error}")
+        except ConnectionError as e:
+            print(f"Error at handshake: {e}")
+            return
         except Exception as e:
             print(f"Unknown error: {e}")
-
-        if rdt:
-            rdt.stop()
-        print("CLIENT ATENDIDO")
+        if rdt: rdt.stop()
 
     def _dispatch_client(self, file_path, client_type, rdt):
         if client_type == UPLOAD:
