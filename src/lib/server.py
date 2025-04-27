@@ -22,6 +22,7 @@ class Server:
         self.prot_type = protocol
         self.clients = {}
 
+
     def accept_clients(self):
         while True:
             client_data, client_addr = self.skt_acceptor.recvfrom(TAM_BUFFER)
@@ -32,12 +33,14 @@ class Server:
             self.clients[client_addr] = client_thread
             self._reap_dead()
 
+
     def _reap_dead(self):
         for client_addr in list(self.clients):
             thread = self.clients[client_addr]
             if not thread.is_alive():
                 thread.join()
                 del self.clients[client_addr]
+
 
     def _handle_client(self, client_data, client_addr):
         rdt = None
@@ -56,40 +59,33 @@ class Server:
         if rdt:
             rdt.stop()
 
+
     def _dispatch_client(self, file_path, file_name, client_type, rdt):
         if client_type == UPLOAD:
             self._handle_client_upload(file_name, rdt)
         elif client_type == DOWNLOAD:
             self._handle_client_download(file_path, rdt)
 
+
     def _handle_client_upload(self, file_name, rdt):
         with open(file_name, WRITE_BINARY) as file:
             self._recv_file(file, rdt)
+
 
     def _handle_client_download(self, file_path, rdt):
         with open(file_path, READ_BINARY) as file:
             self._send_file(file, rdt)
 
-    #def _recv_fileANTERIOR(self, file, rdt):
-    #    while True:
-    #        data = rdt.receive(CHUNK_SIZE)
-    #        print(f"->>>> {data}")
-    #        file.write(data)
-    #        if len(data) != CHUNK_SIZE:
-    #            break
 
     def _recv_file(self, file, rdt):
         while True:
-            data = rdt.receive(CHUNK_SIZE)
-            file.write(data)
-            
-            print(f"data:   {data}")
-            print(f"len data:   {len(data)}")
-            print(f"chunksize:   {CHUNK_SIZE}")
-            
-            if len(data)<CHUNK_SIZE:#Que pasa si el ultimo justo es 1024? creo que vuelve a entar y es 0. Asi que ya está contemplado. Asegurarlo hardcodeando.
-                print("Termino de leer paquete.")
+            if (data := rdt.receive(CHUNK_SIZE)) is not None:
+                file.write(data)
+                if len(data) < CHUNK_SIZE:
+                    break
+            else:# si el ultimo justo es 1024? 
                 break
+
 
     def _send_file(self, file, rdt):
         while True:
