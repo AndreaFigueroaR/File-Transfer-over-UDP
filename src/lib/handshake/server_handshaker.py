@@ -1,7 +1,6 @@
 import socket
 
 TAM_BUFFER = 1024
-TIME_OUT = 0.1
 
 STOP_ADN_WAIT = 'sw'
 SELECTIVE_REPEAT = 'sr'
@@ -14,10 +13,10 @@ class ServerHandshaker:
 
     def handshake(self, client_data, skt_peer):
         client_num_seq, client_prot_type, client_app_data = client_data.decode().split('|', 2)
-        self._check_type_client(client_prot_type)
+        self._check_prot_type(client_prot_type)
         packet = self._pkt_to_send(client_num_seq)
         self._send_handshake_msg(skt_peer, packet)
-        return client_prot_type, client_app_data, client_num_seq
+        return client_num_seq, client_prot_type, client_app_data
 
     def _send_handshake_msg(self, skt_peer, packet):
         ack = self._try_send_handshake_msg(skt_peer, packet)
@@ -34,12 +33,12 @@ class ServerHandshaker:
             except socket.timeout:
                 continue
             return ack.decode()
-        print(f"[Error]: maximum number of attempts to send message was reached")
+        raise ConnectionError("[Error]: maximum number of attempts to send message was reached")
 
     def _pkt_to_send(self, client_num_seq) -> str:
-        f"{self.num_seq}|{client_num_seq}".encode()
+        return f"{self.num_seq}|{client_num_seq}".encode()
 
-    def _check_type_client(type_prot_client):
-        if not (type_prot_client ==
-                STOP_ADN_WAIT or type_prot_client == SELECTIVE_REPEAT):
-            raise ValueError(f"[Client] Invalid client protocol type, received: {type_prot_client}. Not a valid selection")
+    def _check_prot_type(self, client_prot_type):
+        if not (client_prot_type ==
+                STOP_ADN_WAIT or client_prot_type == SELECTIVE_REPEAT):
+            raise ValueError(f"[Client] Invalid client protocol type, received: {client_prot_type}. Not a valid selection")
