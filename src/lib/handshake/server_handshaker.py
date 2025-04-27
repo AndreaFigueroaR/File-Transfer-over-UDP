@@ -16,7 +16,7 @@ class ServerHandshaker:
         self._check_prot_type(client_prot_type)
         packet = self._pkt_to_send(client_num_seq)
         self._send_handshake_msg(skt_peer, packet)
-        return client_num_seq, client_prot_type, client_app_data
+        return int(client_num_seq), client_prot_type, client_app_data
 
     def _send_handshake_msg(self, skt_peer, packet):
         ack = self._try_send_handshake_msg(skt_peer, packet)
