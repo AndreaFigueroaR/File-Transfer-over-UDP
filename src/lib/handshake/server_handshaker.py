@@ -6,6 +6,7 @@ STOP_ADN_WAIT = 'sw'
 SELECTIVE_REPEAT = 'sr'
 NUM_ATTEMPS = 10
 
+
 class ServerHandshaker:
     def __init__(self, addr, num_seq):
         self.client_addr = addr
@@ -33,7 +34,8 @@ class ServerHandshaker:
             except socket.timeout:
                 continue
             return ack.decode()
-        raise ConnectionError("[Error]: maximum number of attempts to send message was reached")
+        raise ConnectionError(
+            "[Error]: maximum number of attempts to send message was reached")
 
     def _pkt_to_send(self, client_num_seq) -> str:
         return f"{self.num_seq}|{client_num_seq}".encode()
@@ -41,4 +43,5 @@ class ServerHandshaker:
     def _check_prot_type(self, client_prot_type):
         if not (client_prot_type ==
                 STOP_ADN_WAIT or client_prot_type == SELECTIVE_REPEAT):
-            raise ValueError(f"[Client] Invalid client protocol type, received: {client_prot_type}. Not a valid selection")
+            raise ValueError(
+                f"[Client] Invalid client protocol type, received: {client_prot_type}. Not a valid selection")

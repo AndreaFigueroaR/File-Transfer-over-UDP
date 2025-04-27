@@ -4,8 +4,9 @@ UPLOAD = 'U'
 DOWNLOAD = 'D'
 
 READ_BINARY = "rb"
-WRITE_BINARY ="wb"
+WRITE_BINARY = "wb"
 CHUNK_SIZE = 1024
+
 
 class Client:
     def __init__(self, srv_host, srv_port, protocol):
@@ -31,7 +32,8 @@ class Client:
             return
         except Exception as e:
             print(f"Unknown error: {e}")
-        if rdt: rdt.stop()
+        if rdt:
+            rdt.stop()
 
     def _dispatch_client(self, file_path, client_type, rdt):
         if client_type == UPLOAD:
@@ -42,21 +44,22 @@ class Client:
     def _handle_client_upload(self, file_path, rdt):
         with open(file_path, READ_BINARY) as file:
             self._send_file(file, rdt)
-        
+
     def _handle_client_download(self, file_path, rdt):
         with open(file_path, WRITE_BINARY) as file:
             self._recv_file(file, rdt)
-            
+
     def _recv_file(self, file, rdt):
         while True:
             data = rdt.receive(CHUNK_SIZE)
-            if not data:
-                break
             file.write(data)
-        
+            if len(data) != CHUNK_SIZE:
+                break
+
     def _send_file(self, file, rdt):
         while True:
             data = file.read(CHUNK_SIZE)
-            if not data:
-                break
             rdt.send(data)
+            if len(data) == 0:
+                print("[CLIENT] TERMINA")
+                break

@@ -6,6 +6,7 @@ from lib.stop_and_wait import StopAndWait
 TIME_OUT = 0.1
 PROT_SR = "sr"
 
+
 class ClientRDT:
     def __init__(self, server_addr):
         self.srv_addr = server_addr
@@ -34,4 +35,5 @@ class ClientRDT:
         if prot_type == PROT_SR:
             return SelectiveRepeat(
                 self.skt, self.num_seq, self.srv_num_seq, self.srv_addr)
-        return StopAndWait(self.skt, self.num_seq, self.srv_num_seq, self.srv_addr)
+        return StopAndWait(self.skt, self.num_seq,
+                           self.srv_num_seq, self.srv_addr)

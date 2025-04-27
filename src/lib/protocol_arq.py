@@ -6,10 +6,12 @@ TAM_BUFFER = 1024
 
 class ProtocolARQ:
 
-    def __init__(self, socket_peer, local_seq, remote_seq,remote_adress):
-        
+    def __init__(self, socket_peer, local_seq, remote_seq, remote_adress):
+        print("local_seq: ", local_seq)
+        print("remote_seq: ", remote_seq)
         self.socket = socket_peer
-        #self.time_out.settimeout(TIMEOUT)
+        self.chunk_size=0
+        # self.time_out.settimeout(TIMEOUT)
         self.local_seq = local_seq
         self.remote_seq = remote_seq
         # tupla con address y port de con quien me debería de estar comunicando

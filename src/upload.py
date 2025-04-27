@@ -5,7 +5,7 @@ from lib.client import Client
 def main():
     args = parser.parse_upload()
     display_mode(args)
-    
+
     client = Client(args.host, args.port, args.protocol)
     client.upload(args.src, args.name)
 

@@ -6,6 +6,7 @@ from lib.stop_and_wait import StopAndWait
 TIME_OUT = 0.1
 PROT_SR = "sr"
 
+
 class ServerRDT:
     def __init__(self, addr):
         self.client_addr = addr
@@ -26,7 +27,7 @@ class ServerRDT:
     def send(self, data):
         self.protocol.send(data)
 
-    def receive(self, sz)-> bytearray:
+    def receive(self, sz) -> bytearray:
         return self.protocol.receive(sz)
 
     def stop(self):
@@ -36,9 +37,10 @@ class ServerRDT:
         if prot_type == PROT_SR:
             return SelectiveRepeat(
                 self.peer, self.num_seq, self.client_num_seq, self.client_addr)
-        return StopAndWait(self.peer, self.num_seq, self.client_num_seq, self.client_addr)
+        return StopAndWait(self.peer, self.num_seq,
+                           self.client_num_seq, self.client_addr)
 
-    def _check_prot_type(self,client_prot_type, server_prot_type):
+    def _check_prot_type(self, client_prot_type, server_prot_type):
         if client_prot_type != server_prot_type:
             raise ValueError(
                 f"Invalid protocol type: {client_prot_type}. Expected {server_prot_type}")

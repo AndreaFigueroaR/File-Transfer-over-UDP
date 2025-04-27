@@ -53,7 +53,8 @@ class Server:
             return
         except Exception as e:
             print(f"Unknown error: {e}")
-        if rdt: rdt.stop()
+        if rdt:
+            rdt.stop()
 
     def _dispatch_client(self, file_path, file_name, client_type, rdt):
         if client_type == UPLOAD:
@@ -72,16 +73,17 @@ class Server:
     def _recv_file(self, file, rdt):
         while True:
             data = rdt.receive(CHUNK_SIZE)
-            if not data:
-                break
+            print(f"->>>> {data}")
             file.write(data)
+            if len(data) != CHUNK_SIZE:
+                break
 
     def _send_file(self, file, rdt):
         while True:
             data = file.read(CHUNK_SIZE)
-            if not data:
-                break
             rdt.send(data)
+            if len(data) == 0:
+                break
 
     def _clear_client(self, client_addr):
         self.clients[client_addr].join()

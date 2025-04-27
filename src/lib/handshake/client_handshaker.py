@@ -13,7 +13,8 @@ class ClientHandshaker:
         self.srv_addr = addr
         self.num_seq = num_seq
 
-    def handshake(self, client_type, client_prot_type, file_path, skt, file_name):
+    def handshake(self, client_type, client_prot_type,
+                  file_path, skt, file_name):
         srv_num_seq = self._send_first_handshake_msg(
             skt, client_type, client_prot_type, file_path, file_name)
         self._send_second_handshake_msg(skt, srv_num_seq)
@@ -42,7 +43,8 @@ class ClientHandshaker:
                 continue
             srv_num_seq, ack = data_handshake.decode().split("|", 1)
             return srv_num_seq, ack
-        raise ConnectionError("[Error]: maximum number of attempts to send message was reached")
+        raise ConnectionError(
+            "[Error]: maximum number of attempts to send message was reached")
 
     def _formatted_client_info(
             self, client_type, client_prot_type, file_path, file_name) -> str:
