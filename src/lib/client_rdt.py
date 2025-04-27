@@ -1,7 +1,7 @@
 import socket
-from handshake.client_handshaker import ClientHandshaker
+from lib.handshake.client_handshaker import ClientHandshaker
 from lib.selective_repeat import SelectiveRepeat
-from stop_and_wait import StopAndWait
+from lib.stop_and_wait import StopAndWait
 
 PROT_SR = "sr"
 

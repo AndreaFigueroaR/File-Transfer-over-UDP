@@ -1,4 +1,4 @@
-from protocol_arq import ProtocolARQ
+from lib.protocol_arq import ProtocolARQ
 
 
 class SelectiveRepeat(ProtocolARQ):

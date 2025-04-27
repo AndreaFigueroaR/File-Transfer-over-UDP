@@ -1,7 +1,7 @@
 import socket
 import threading
 
-from server_rdt import ServerRDT
+from lib.server_rdt import ServerRDT
 
 READ_BINARY = 'rb'
 WRITE_BINARY = 'wb'
@@ -16,9 +16,9 @@ CHUNK_SIZE = 1024
 
 class Server:
     def __init__(self, host, port, protocol):
+        self.addr = (host, port)
         self.skt_acceptor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.skt_acceptor.bind(self.addr)
-        self.addr = (host, port)
         self.prot_type = protocol
         self.clients = {}
 
@@ -43,12 +43,14 @@ class Server:
                 del self.clients[client_addr]
 
     def _handle_client(self, client_data, client_addr):
+        print("ATENDIENDO A UN CLIENT:")
         rdt = None
         try:
             rdt = ServerRDT(client_addr)
             app_data = rdt.meet_client(client_data, self.prot_type)
-            file_path, client_type = app_data.split('|')
-            self._dispatch_client(file_path, client_type, rdt)
+            #file_path, client_type = app_data.split('|')
+            print(f"{app_data}")
+            #self._dispatch_client(file_path, client_type, rdt)
         except ValueError as error:
             print(f"Error meeting client: {error}")
         except Exception as e:
@@ -56,7 +58,7 @@ class Server:
 
         if rdt:
             rdt.stop()
-        self._clear_client(client_addr)
+        print("CLIENT ATENDIDO")
 
     def _dispatch_client(self, file_path, client_type, rdt):
         if client_type == UPLOAD:

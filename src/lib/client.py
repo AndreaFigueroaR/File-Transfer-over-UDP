@@ -1,6 +1,4 @@
-import socket
-
-from client_rdt import ClientRDT
+from lib.client_rdt import ClientRDT
 
 UPLOAD = 'U'
 DOWNLOAD = 'D'
@@ -25,7 +23,8 @@ class Client:
         try:
             rdt = ClientRDT(self.srv_addr)
             rdt.start(self.prot_type, client_type, file_path)
-            self._dispatch_client(file_path, client_type, rdt)
+            print("handshake terminó")
+            #self._dispatch_client(file_path, client_type, rdt)
         except ValueError as error:
             print(f"Error: {error}")
         except Exception as e:

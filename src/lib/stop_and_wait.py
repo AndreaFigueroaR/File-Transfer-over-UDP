@@ -1,8 +1,6 @@
-from protocol_arq import ProtocolARQ, TIMEOUT, TAM_BUFFER
+from lib.protocol_arq import ProtocolARQ, TIMEOUT, TAM_BUFFER
 
 # TODO: Cómo es que el mismo stop and wait determina su propio window size?
-
-
 class StopAndWait(ProtocolARQ):
 
     # se recibe cualqueir tamaño
