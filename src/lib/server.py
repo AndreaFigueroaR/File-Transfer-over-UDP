@@ -70,12 +70,25 @@ class Server:
         with open(file_path, READ_BINARY) as file:
             self._send_file(file, rdt)
 
+    #def _recv_fileANTERIOR(self, file, rdt):
+    #    while True:
+    #        data = rdt.receive(CHUNK_SIZE)
+    #        print(f"->>>> {data}")
+    #        file.write(data)
+    #        if len(data) != CHUNK_SIZE:
+    #            break
+
     def _recv_file(self, file, rdt):
         while True:
             data = rdt.receive(CHUNK_SIZE)
-            print(f"->>>> {data}")
             file.write(data)
-            if len(data) != CHUNK_SIZE:
+            
+            print(f"data:   {data}")
+            print(f"len data:   {len(data)}")
+            print(f"chunksize:   {CHUNK_SIZE}")
+            
+            if len(data)<CHUNK_SIZE:#Que pasa si el ultimo justo es 1024? creo que vuelve a entar y es 0. Asi que ya está contemplado. Asegurarlo hardcodeando.
+                print("Termino de leer paquete.")
                 break
 
     def _send_file(self, file, rdt):

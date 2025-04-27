@@ -10,13 +10,12 @@ class ProtocolARQ:
         print("local_seq: ", local_seq)
         print("remote_seq: ", remote_seq)
         self.socket = socket_peer
-        self.chunk_size=0
         # self.time_out.settimeout(TIMEOUT)
         self.local_seq = local_seq
         self.remote_seq = remote_seq
         # tupla con address y port de con quien me debería de estar comunicando
         self.adress = remote_adress
-
+ 
     @abstractmethod
     def _recv_segment():
         pass
