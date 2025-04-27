@@ -15,7 +15,7 @@ class ProtocolARQ:
         self.remote_seq = remote_seq
         # tupla con address y port de con quien me debería de estar comunicando
         self.adress = remote_adress
- 
+
     @abstractmethod
     def _recv_segment():
         pass
