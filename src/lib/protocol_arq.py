@@ -7,7 +7,8 @@ TAM_BUFFER = 1024
 class ProtocolARQ:
 
     def __init__(self, socket_peer, local_seq, remote_seq):
-        self.time_out.settimeout(TIMEOUT)
+        
+        #self.time_out.settimeout(TIMEOUT)
         self.socket = socket_peer
         self.local_seq = local_seq
         self.remote_seq = remote_seq
