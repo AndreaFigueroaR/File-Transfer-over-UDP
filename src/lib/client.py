@@ -23,10 +23,12 @@ class Client:
         try:
             rdt = ClientRDT(self.srv_addr)
             rdt.start(self.prot_type, client_type, file_path)
-            print("handshake terminó")
-            #self._dispatch_client(file_path, client_type, rdt)
+            # self._dispatch_client(file_path, client_type, rdt)
         except ValueError as error:
             print(f"Error: {error}")
+        except ConnectionError as e:
+            print(f"Error at handshake: {e}")
+            return
         except Exception as e:
             print(f"Unknown error: {e}")
         if rdt: rdt.stop()
