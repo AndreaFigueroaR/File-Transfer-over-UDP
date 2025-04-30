@@ -11,7 +11,6 @@ TAM_BUFFER = 1024
 UPLOAD = 'U'
 DOWNLOAD = 'D'
 
-HANDSHAKE_SUCCESS = 0
 CHUNK_SIZE = 1024
 
 
@@ -26,16 +25,19 @@ class Server:
 
 
     def accept_clients(self):
-        # TODO: catchear excepcion KeyboardInterrupt.
-        while True:
-            client_data, client_addr = self.skt_acceptor.recvfrom(TAM_BUFFER)
-            client_thread = threading.Thread(
-                target=self._handle_client, args=(
-                    client_data, client_addr))
-            client_thread.start()
-            self.clients[client_addr] = client_thread
-            self._reap_dead()
-
+        try:
+            while True:
+                client_data, client_addr = self.skt_acceptor.recvfrom(TAM_BUFFER)
+                client_thread = threading.Thread(
+                    target=self._handle_client, args=(
+                        client_data, client_addr))
+                client_thread.start()
+                self.clients[client_addr] = client_thread
+                self._reap_dead()
+        except KeyboardInterrupt:
+            self.skt_acceptor.close()
+        finally:
+            self._clear()
 
     def _reap_dead(self):
         for client_addr in list(self.clients):
@@ -78,7 +80,8 @@ class Server:
 
 
     def _handle_client_download(self, rdt, srv_file_name):
-        # TODO: chequear si el archivo existe. Sino lanzar excepcion.
+        if not os.path.isfile(srv_file_name):
+            raise FileNotFoundError(f"File {srv_file_name} does not exist.")
         with open(srv_file_name, READ_BINARY) as file:
             self._send_file(rdt, file)
 
@@ -96,6 +99,7 @@ class Server:
             if not data:
                 break
 
-    def _clear_client(self, client_addr):
-        self.clients[client_addr].join()
-        del self.clients[client_addr]
+    def _clear(self):
+        for client_addr in list(self.clients.keys()):
+            self.clients[client_addr].join()
+            del self.clients[client_addr]

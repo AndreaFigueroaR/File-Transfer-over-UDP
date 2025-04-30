@@ -16,10 +16,10 @@ class ClientRDT:
         self.srv_num_seq = None
         self.num_seq = 0
 
-    def start(self, prot_type, client_type, file_name) -> str:
+    def start(self, prot_type, client_type, srv_file_name) -> str:
         handshaker = ClientHandshaker(self.srv_addr, self.num_seq)
         self.srv_num_seq, self.srv_addr = handshaker.handshake(
-            client_type, prot_type, self.skt, file_name)
+            client_type, prot_type, srv_file_name, self.skt)
         self.protocol = self._init_protocol(prot_type)
 
     def send(self, data):

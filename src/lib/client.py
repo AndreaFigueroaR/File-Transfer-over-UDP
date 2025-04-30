@@ -46,7 +46,8 @@ class Client:
             self._handle_client_download(rdt, storage, client_file_name)
 
     def _handle_client_upload(self, rdt, client_src_path):
-        # TODO: chequear si el archivo existe. Sino lanzar excepcion.
+        if not os.path.isfile(client_src_path):
+            raise FileNotFoundError(f"File {client_src_path} does not exist.")
         with open(client_src_path, READ_BINARY) as file:
             self._send_file(rdt, file)
 
