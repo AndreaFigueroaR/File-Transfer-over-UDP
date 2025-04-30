@@ -47,4 +47,4 @@ class ClientHandshaker:
 
     def _formatted_client_info(
             self, client_type, client_prot_type, file_name) -> str:
-        return f"{self.num_seq}|{client_prot_type}|{file_name}|{client_type}"
+        return f"{self.num_seq}|{client_prot_type}|{client_type}|{file_name}"

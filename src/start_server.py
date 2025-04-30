@@ -6,7 +6,7 @@ def main():
     args = parser.parse_server()
     display_mode(args)
 
-    server = Server(args.host, args.port, args.protocol)
+    server = Server(args.host, args.port, args.protocol, args.storage)
     server.accept_clients()
 
 

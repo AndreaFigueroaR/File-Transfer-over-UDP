@@ -6,7 +6,7 @@ DESC_DOWNLOAD = "File Transfer Download."
 DESC_UPLOAD = "File Transfer Upload."
 
 # Constantes de paths para guardar archivos
-STORAGE_SERVER = './storage/server/'
+STORAGE_SERVER = './storage/upload/'
 STORAGE_DOWNLOAD = './storage/download/'
 
 # Constantes de IP y port de Server

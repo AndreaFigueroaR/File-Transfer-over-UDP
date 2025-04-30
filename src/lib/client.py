@@ -1,3 +1,5 @@
+import os
+
 from lib.client_rdt import ClientRDT
 
 UPLOAD = 'U'
@@ -13,18 +15,18 @@ class Client:
         self.srv_addr = (srv_host, srv_port)
         self.prot_type = protocol
 
-    def upload(self, src, file_name):
-        self._start(src, file_name, UPLOAD)
+    def upload(self, client_src, srv_file_name):
+        self._start(client_src, srv_file_name, UPLOAD)
 
-    def download(self, dst, file_name):
-        self._start(dst, file_name, DOWNLOAD)
+    def download(self, client_dst, srv_file_name):
+        self._start(client_dst, srv_file_name, DOWNLOAD)
 
-    def _start(self, file_path, file_name, client_type):
+    def _start(self, client_file_path, srv_file_name, client_type):
         rdt = None
         try:
             rdt = ClientRDT(self.srv_addr)
-            rdt.start(self.prot_type, client_type, file_name)
-            self._dispatch_client(rdt, client_type, file_path)
+            rdt.start(self.prot_type, client_type, srv_file_name)
+            self._dispatch_client(rdt, client_type, client_file_path, srv_file_name)
         except ValueError as error:
             print(f"Error: {error}")
         except ConnectionError as e:
@@ -35,19 +37,29 @@ class Client:
         if rdt:
             rdt.stop()
 
-    def _dispatch_client(self, rdt, client_type, file_path):
+    def _dispatch_client(self, rdt, client_type, client_file_path, srv_file_name):
         if client_type == UPLOAD:
-            self._handle_client_upload(rdt, file_path)
+            self._handle_client_upload(rdt, client_file_path)
         elif client_type == DOWNLOAD:
-            self._handle_client_download(rdt, file_path)
+            storage = os.path.dirname(client_file_path)
+            client_file_name = self._get_client_file_name(client_file_path, srv_file_name)
+            self._handle_client_download(rdt, storage, client_file_name)
 
-    def _handle_client_upload(self, rdt, file_path):
-        with open(file_path, READ_BINARY) as file:
+    def _handle_client_upload(self, rdt, client_src_path):
+        # TODO: chequear si el archivo existe. Sino lanzar excepcion.
+        with open(client_src_path, READ_BINARY) as file:
             self._send_file(rdt, file)
 
-    def _handle_client_download(self, rdt, file_path):
-        with open(file_path, WRITE_BINARY) as file:
+    def _handle_client_download(self, rdt, storage, client_file_name):
+        os.makedirs(storage, exist_ok=True)
+        client_dst_path = os.path.join(storage, client_file_name)
+        with open(client_dst_path, WRITE_BINARY) as file:
             self._recv_file(rdt, file)
+
+    def _get_client_file_name(self, client_file_path, srv_file_name):
+        client_file_name = os.path.basename(client_file_path)
+        if not client_file_name:
+            client_file_name = srv_file_name
 
     def _send_file(self, rdt, file):
         while True:
