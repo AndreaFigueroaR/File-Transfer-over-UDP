@@ -97,6 +97,6 @@ def parse_common_for_client(parser: argparse.ArgumentParser):
         dest="name",
         required=True,
         metavar="FILENAME",
-        help="name of the file to request to the server"
+        help="file name"
     )
     return parser
