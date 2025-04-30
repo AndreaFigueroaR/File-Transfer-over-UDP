@@ -47,8 +47,8 @@ class Server:
         try:
             rdt = ServerRDT(client_addr)
             app_data = rdt.meet_client(client_data, self.prot_type)
-            file_path, file_name, client_type = app_data.split('|')
-            self._dispatch_client(file_path, file_name, client_type, rdt)
+            file_name, client_type = app_data.split('|')
+            self._dispatch_client(file_name, client_type, rdt)
         except ValueError as error:
             print(f"Error meeting client: {error}")
         except ConnectionError as e:
@@ -60,11 +60,11 @@ class Server:
             rdt.stop()
 
 
-    def _dispatch_client(self, file_path, file_name, client_type, rdt):
+    def _dispatch_client(self, file_name, client_type, rdt):
         if client_type == UPLOAD:
             self._handle_client_upload(file_name, rdt)
         elif client_type == DOWNLOAD:
-            self._handle_client_download(file_path, rdt)
+            self._handle_client_download(file_name, rdt)
 
 
     def _handle_client_upload(self, file_name, rdt):
@@ -72,8 +72,8 @@ class Server:
             self._recv_file(file, rdt)
 
 
-    def _handle_client_download(self, file_path, rdt):
-        with open(file_path, READ_BINARY) as file:
+    def _handle_client_download(self, file_name, rdt):
+        with open(file_name, READ_BINARY) as file:
             self._send_file(file, rdt)
 
 
