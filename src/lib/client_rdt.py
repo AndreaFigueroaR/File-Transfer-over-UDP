@@ -16,11 +16,11 @@ class ClientRDT:
         self.srv_num_seq = None
         self.num_seq = 0
 
-    def start(self, prot_type, client_type, srv_file_name) -> str:
+    def start(self, prot_type, client_type, srv_file_name, is_verbose) -> str:
         handshaker = ClientHandshaker(self.srv_addr, self.num_seq)
         self.srv_num_seq, self.srv_addr = handshaker.handshake(
             client_type, prot_type, srv_file_name, self.skt)
-        self.protocol = self._init_protocol(prot_type)
+        self.protocol = self._init_protocol(prot_type, is_verbose)
 
     def send(self, data):
         self.protocol.send(data)
@@ -31,9 +31,9 @@ class ClientRDT:
     def stop(self):
         self.protocol.stop()
 
-    def _init_protocol(self, prot_type):
+    def _init_protocol(self, prot_type, is_verbose):
         if prot_type == PROT_SR:
             return SelectiveRepeat(
-                self.skt, self.num_seq, self.srv_num_seq, self.srv_addr)
+                self.skt, self.num_seq, self.srv_num_seq, self.srv_addr, is_verbose)
         return StopAndWait(self.skt, self.num_seq,
-                           self.srv_num_seq, self.srv_addr)
+                           self.srv_num_seq, self.srv_addr, is_verbose)

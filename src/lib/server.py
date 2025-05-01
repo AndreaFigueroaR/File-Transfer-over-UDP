@@ -15,14 +15,24 @@ CHUNK_SIZE = 1024
 
 
 class Server:
-    def __init__(self, host, port, protocol, storage):
+    def __init__(self, host, port, protocol, storage, is_verbose):
         self.addr = (host, port)
+        
         self.skt_acceptor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.skt_acceptor.bind(self.addr)
+        print(
+        f"[INFO] Server listening in IP: {host}, PORT:{port} using protocol {protocol}")
+
         self.prot_type = protocol
         self.storage = storage
-        self.clients = {}
 
+        self.is_verbose = is_verbose
+        if is_verbose:
+            print("[INFO] Verbose mode ON")
+        else: 
+            print("[INFO] Quiet mode ON")
+
+        self.clients = {}
 
     def accept_clients(self):
         try:
@@ -51,7 +61,7 @@ class Server:
         rdt = None
         try:
             rdt = ServerRDT(client_addr)
-            app_data = rdt.meet_client(client_data, self.prot_type)
+            app_data = rdt.meet_client(client_data, self.prot_type, self.is_verbose)
             client_type, srv_file_name = app_data.split('|')
             self._dispatch_client(rdt, client_type, srv_file_name)
         except ValueError as error:
@@ -77,13 +87,14 @@ class Server:
         srv_file_path = os.path.join(storage, srv_file_name)
         with open(srv_file_path, WRITE_BINARY) as file:
             self._recv_file(rdt, file)
-
+        print("[INFO] File received")
 
     def _handle_client_download(self, rdt, srv_file_name):
         if not os.path.isfile(srv_file_name):
             raise FileNotFoundError(f"File {srv_file_name} does not exist.")
         with open(srv_file_name, READ_BINARY) as file:
             self._send_file(rdt, file)
+        print("[INFO] File sended")
 
     def _recv_file(self, rdt, file):
         while True:

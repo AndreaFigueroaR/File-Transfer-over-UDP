@@ -1,80 +1,92 @@
-from lib.protocol_arq import ProtocolARQ, TIMEOUT, TAM_BUFFER
+from lib.protocol_arq import ProtocolARQ, TIMEOUT, CHUNK_SIZE
 import socket
-# TODO: Cómo es que el mismo stop and wait determina su propio window size?
-FIN_SEQUENCE = b'\xFE\xFD\xFC'
 
+NUM_ATTEMPS = 10
+DELIM = "-----------------------------------"
+IND = "     "
 
 class StopAndWait(ProtocolARQ):
-    # se recibe cualqueir tamaño
     def send(self, data: bytes):
-        print(f"Len data:   {len(data)}")
         if len(data) == 0:
-            # enviando ack de despedida
-            ack = self.remote_seq.to_bytes(1, byteorder='big')
-            self.socket.sendto(ack, self.adress)
-            self.remote_seq = 1 - self.remote_seq
+            self._send_ack(self.remote_sn)
+            self._update_expected_seq_num()
             return
-        for i in range(0, len(data), TAM_BUFFER):
-            # TODO: Verificar que no rompe si no se cumple con el TAM_BUFFER
-            segment = data[i:i + TAM_BUFFER]
-            self._send_segment(segment)
+        
+        self._print_if_verbose(f"Data size to send: {len(data)}")
+        for i in range(0, len(data), CHUNK_SIZE):
+            data_chunk = data[i:i + CHUNK_SIZE]
+            self._send_segment(data_chunk)
+
+    def _send_ack(self, ack):
+        ack_b = ack.to_bytes(1, byteorder='big')
+        self.socket.sendto(ack_b, self.address)
 
     # TODO : hacer parte del header de cada segmento el largo del payload
     # (aparte del numero de secuencia)
-    def _send_segment(self, segment: bytes):
-        seq_id_b = self.remote_seq.to_bytes(1, byteorder='big')
-        pkt = seq_id_b + segment  # [1 + TAMBUFFER]
-        self.socket.sendto(pkt, self.adress)
+    def _send_segment(self, data_chunk: bytes):
+        seq_num_byte = self.remote_sn.to_bytes(1, byteorder='big')
+        segment = seq_num_byte + data_chunk
+        
+        for _ in range(NUM_ATTEMPS):
+            try:
+                self._print_if_verbose(f"{IND}{DELIM}")
+                self._print_if_verbose(f"{IND}Segment size to send: {len(segment)}")
+                
+                self.socket.sendto(segment, self.address)
+                
+                ack = self._recv_ack()
+                if ack != self.remote_sn:
+                    self._print_if_verbose(f"{IND}Received unexpected ACK.")
+                else:
+                    self._print_if_verbose(f"{IND}Received expected ACK.")
+                    self._update_expected_seq_num()
+                    return
+            except socket.timeout:
+                self._print_if_verbose(f"{IND}[ERROR]: Timeout")
+        raise ConnectionError(
+            "[Error]: failed to send segment after multiple attempts")
 
-        try:
-            print("try enviar segmento")
-            rcv_pkt, _ = self.socket.recvfrom(1)
-            ack = int.from_bytes(rcv_pkt[:1], byteorder='big')
-
-            print(ack)
-            print(self.remote_seq)
-            if ack != self.remote_seq:
-                self._send_segment(segment)  # TODO: Agregar caso base
-            else:
-                self.remote_seq = 1 - self.remote_seq
-        except socket.timeout:
-            print("[Error]: Timeout")
-            self._send_segment(segment)
-            print("[Error]: Resended segment")
-            # Aca si tenemos muchos timeouts podriamos cortar
-
-    def receive(self, total_size) -> bytearray:
-        buffer = bytearray()
+    def receive(self, max_data_size) -> bytearray:
+        data = bytearray()
         bytes_received = 0
 
-        while bytes_received < total_size:
+        while bytes_received < max_data_size:
             try:
-                packet, _ = self.socket.recvfrom(1 + TAM_BUFFER)
-                seq = int.from_bytes(packet[0:1], byteorder='big')
-                payload = packet[1:]
+                seq_num, payload = self._recv_segment()
 
-                if seq == self.remote_seq:
-                    print(f"Leo en payload:   {len(payload)}")
-                    buffer.extend(payload)
-                    bytes_received += len(payload)
-                    ack = seq.to_bytes(1, byteorder='big')
-                    self.socket.sendto(ack, self.adress)
-                    self.remote_seq = 1 - self.remote_seq
-                    if len(payload) < TAM_BUFFER:
-                        return buffer
+                if seq_num != self.remote_sn:
+                    self._print_if_verbose(f"Received unexpected sequence number.")
+                    self._send_ack(1 - self.remote_sn)
                 else:
-                    print(
-                        "No existen los erroes. Me verás cuando no uses tu misma ip c:")
-                    # caso loss: reenviar último paquete
-                    ack = (1 - self.remote_seq).to_bytes(1, byteorder='big')
-                    self.socket.sendto(ack, self.adress)
-
+                    self._print_if_verbose(f"Received expected sequence number.")
+                    data.extend(payload)
+                    bytes_received += len(payload)
+                    self._send_ack(seq_num)
+                    self._update_expected_seq_num()
+                    if len(payload) < CHUNK_SIZE:
+                        return data
             except socket.timeout:
-                print("[Error]: Timeout receive")
-                ack = (1 - self.remote_seq).to_bytes(1, byteorder='big')
-                self.socket.sendto(ack, self.adress)
+                print("[Error]: Timeout")
+                self._send_ack(1 - self.remote_sn)
+        return data
 
-        return buffer
+    def _recv_ack(self):
+        segment, _ = self.socket.recvfrom(1 + CHUNK_SIZE)
+        ack = int.from_bytes(segment[0:1], byteorder='big')
+        self._print_if_verbose(f"{IND}ACK expected: {self.remote_sn}")
+        self._print_if_verbose(f"{IND}ACK received: {ack}")
+        return ack
 
-    def stop(self):  # TODO: maybe un try? arriba se espera se haga seguramente (creo)
-        self.socket.close()
+    def _recv_segment(self):
+        segment, _ = self.socket.recvfrom(1 + CHUNK_SIZE)
+        seq_num = int.from_bytes(segment[0:1], byteorder='big')
+        payload = segment[1:]
+        
+        self._print_if_verbose(DELIM)
+        self._print_if_verbose(f"Segment size to recieve: {len(segment)}")
+        self._print_if_verbose(f"Sequence number expected: {self.remote_sn}")
+        self._print_if_verbose(f"Sequence number received: {seq_num}")
+        return seq_num, payload
+
+    def _update_expected_seq_num(self):
+        self.remote_sn = 1 - self.remote_sn
