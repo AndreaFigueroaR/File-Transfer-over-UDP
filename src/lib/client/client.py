@@ -1,6 +1,6 @@
 import os
 
-from lib.client_rdt import ClientRDT
+from lib.client.client_rdt import ClientRDT
 
 UPLOAD = 'U'
 DOWNLOAD = 'D'

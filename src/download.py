@@ -1,5 +1,5 @@
 from lib.parser import parser
-from lib.client import Client
+from lib.client.client import Client
 
 
 def main():

@@ -1,4 +1,4 @@
-from lib.protocol_arq import *
+from lib.protocols.protocol_arq import *
 import time
 import socket
 

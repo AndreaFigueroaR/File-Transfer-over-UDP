@@ -1,4 +1,4 @@
-from lib.protocol_arq import ProtocolARQ, TIMEOUT, CHUNK_SIZE
+from lib.protocols.protocol_arq import ProtocolARQ, TIMEOUT, CHUNK_SIZE
 import socket
 
 NUM_ATTEMPS = 10

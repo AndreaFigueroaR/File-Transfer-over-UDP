@@ -2,7 +2,7 @@ import os
 import socket
 import threading
 
-from lib.server_rdt import ServerRDT
+from lib.server.server_rdt import ServerRDT
 
 READ_BINARY = "rb"
 WRITE_BINARY = "wb"
