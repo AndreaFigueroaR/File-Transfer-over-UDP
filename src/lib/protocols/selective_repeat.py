@@ -3,7 +3,7 @@ import time
 import socket
 
 TIMEOUT = 1
-MAX_WIN_SIZE = 50
+MAX_WIN_SIZE = 4
 
 
 class SelectiveRepeat(ProtocolARQ):
