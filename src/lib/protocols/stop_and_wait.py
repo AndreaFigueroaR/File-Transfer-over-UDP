@@ -6,7 +6,7 @@ NUM_ATTEMPS = 10
 
 class StopAndWait(ProtocolARQ):
     def send(self, data: bytes):
-        current_sn = self.remote_sn
+        current_sn = 0
         if len(data) == 0:
             self._send_ack(current_sn)
             return
@@ -37,7 +37,7 @@ class StopAndWait(ProtocolARQ):
             "[ERROR]: failed to send segment after multiple attempts")
 
     def receive(self, max_data_size) -> bytearray:
-        expected_sn = self.remote_sn
+        expected_sn = 0
         data = bytearray()
         bytes_received = 0
 

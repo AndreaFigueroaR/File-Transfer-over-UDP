@@ -8,7 +8,7 @@ MAX_WIN_SIZE = 4
 
 class SelectiveRepeat(ProtocolARQ):
     def send(self, data: bytes):
-        current_sn = self.remote_sn
+        current_sn = 0
         if len(data) == 0:
             self._send_ack(current_sn)
             return
@@ -20,8 +20,8 @@ class SelectiveRepeat(ProtocolARQ):
         win_size = self._set_win_size(len(data_chunks))
         timers = {}
         while current_sn < len(data_chunks):
-            # Enviar segmentos dentro de la window para los cuales:
-            # no estoy esperando ack y no he recibido ack
+            # Send segments within the window for which:
+            # I'm not waiting for an ACK and haven't received an ACK
             win_end = min(current_sn + win_size, len(data_chunks))
             for sn in range(current_sn, win_end):
                 if sn in timers or sn in ack_buffer:
@@ -42,7 +42,7 @@ class SelectiveRepeat(ProtocolARQ):
                 current_sn = self._update_current_sn(ack, ack_buffer)
                 del timers[ack]
             
-            # Reenviar segmentos expirados
+            # Resend expired segments
             for sn in list(timers):
                 if timers[sn] + TIMEOUT <= time.time():
                     self._print_if_verbose(f"{IND}Resending expired segment with ACK {sn}.")
@@ -50,7 +50,7 @@ class SelectiveRepeat(ProtocolARQ):
                     timers[sn] = time.time()
 
     def receive(self, max_data_size) -> bytearray:
-        expected_sn = self.remote_sn
+        expected_sn = 0
         segments_buffer = {}
         data = bytearray()
         bytes_received = 0
@@ -77,7 +77,7 @@ class SelectiveRepeat(ProtocolARQ):
                     if len(payload) < DATA_CHUNK_SIZE:
                         return data
                     
-                    # Guardar segmentos consecutivos que estaban en el buffer
+                    # Store consecutive segments that were in the buffer
                     expected_sn = seq_num + 1
                     while expected_sn in segments_buffer:
                         data.extend(segments_buffer.pop(expected_sn))

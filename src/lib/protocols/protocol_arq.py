@@ -6,9 +6,8 @@ IND = "     "
 
 
 class ProtocolARQ:
-    def __init__(self, socket, remote_sn, remote_address, is_verbose):
+    def __init__(self, socket, remote_address, is_verbose):
         self.socket = socket
-        self.remote_sn = remote_sn
         self.address = remote_address
         self.is_verbose = is_verbose
 

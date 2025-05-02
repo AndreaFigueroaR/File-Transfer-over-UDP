@@ -8,16 +8,16 @@ NUM_ATTEMPS = 10
 
 
 class ServerHandshaker:
-    def __init__(self, addr, num_seq):
+    def __init__(self, addr):
         self.client_addr = addr
-        self.num_seq = num_seq
+        self.num_seq = 0
 
     def handshake(self, client_data, skt_peer):
         client_num_seq, client_prot_type, client_app_data = client_data.decode().split('|', 2)
         self._check_prot_type(client_prot_type)
         packet = self._pkt_to_send(client_num_seq)
         self._send_handshake_msg(skt_peer, packet)
-        return int(client_num_seq), client_prot_type, client_app_data
+        return client_prot_type, client_app_data
 
     def _send_handshake_msg(self, skt_peer, packet):
         ack = self._try_send_handshake_msg(skt_peer, packet)

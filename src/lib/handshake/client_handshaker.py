@@ -9,15 +9,15 @@ NUM_ATTEMPS = 10
 
 
 class ClientHandshaker:
-    def __init__(self, addr, num_seq):
+    def __init__(self, addr):
         self.srv_addr = addr
-        self.num_seq = num_seq
+        self.num_seq = 0
 
     def handshake(self, client_type, client_prot_type, srv_file_name, skt):
         srv_num_seq = self._send_first_msg(
             skt, client_type, client_prot_type, srv_file_name)
         self._send_second_msg(skt, srv_num_seq)
-        return int(srv_num_seq), self.srv_addr
+        return self.srv_addr
 
     def _send_first_msg(
             self, skt, client_type, client_prot_type, srv_file_name):

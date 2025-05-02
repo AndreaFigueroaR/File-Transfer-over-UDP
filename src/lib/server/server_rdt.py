@@ -13,15 +13,12 @@ class ServerRDT:
         self.peer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.peer.settimeout(TIME_OUT)
         self.protocol = None
-        self.client_num_seq = None
-        self.num_seq = 0
 
-    def meet_client(self, client_data, server_prot_type, is_verbose) -> str:
-        handshaker = ServerHandshaker(self.client_addr, self.num_seq)
-        self.client_num_seq, client_prot_type, app_data = handshaker.handshake(
-            client_data, self.peer)
-        self._check_prot_type(client_prot_type, server_prot_type)
-        self.protocol = self._init_protocol(server_prot_type, is_verbose)
+    def meet_client(self, client_data, prot_type, is_verbose) -> str:
+        handshaker = ServerHandshaker(self.client_addr)
+        client_prot_type, app_data = handshaker.handshake(client_data, self.peer)
+        self._check_prot_type(client_prot_type, prot_type)
+        self.protocol = self._init_protocol(prot_type, is_verbose)
         return app_data
 
     def send(self, data):
@@ -35,10 +32,10 @@ class ServerRDT:
 
     def _init_protocol(self, prot_type, is_verbose):
         if prot_type == PROT_SR:
-            return SelectiveRepeat(self.peer, self.client_num_seq, self.client_addr, is_verbose)
-        return StopAndWait(self.peer, self.client_num_seq, self.client_addr, is_verbose)
+            return SelectiveRepeat(self.peer, self.client_addr, is_verbose)
+        return StopAndWait(self.peer, self.client_addr, is_verbose)
 
-    def _check_prot_type(self, client_prot_type, server_prot_type):
-        if client_prot_type != server_prot_type:
+    def _check_prot_type(self, client_prot_type, prot_type):
+        if client_prot_type != prot_type:
             raise ValueError(
-                f"Invalid protocol type: {client_prot_type}. Expected {server_prot_type}")
+                f"Invalid protocol type: {client_prot_type}. Expected {prot_type}")
