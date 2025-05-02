@@ -33,7 +33,5 @@ class ClientRDT:
 
     def _init_protocol(self, prot_type, is_verbose):
         if prot_type == PROT_SR:
-            return SelectiveRepeat(
-                self.skt, self.num_seq, self.srv_num_seq, self.srv_addr, is_verbose)
-        return StopAndWait(self.skt, self.num_seq,
-                           self.srv_num_seq, self.srv_addr, is_verbose)
+            return SelectiveRepeat(self.skt, self.srv_num_seq, self.srv_addr, is_verbose)
+        return StopAndWait(self.skt, self.srv_num_seq, self.srv_addr, is_verbose)

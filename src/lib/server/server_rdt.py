@@ -35,10 +35,8 @@ class ServerRDT:
 
     def _init_protocol(self, prot_type, is_verbose):
         if prot_type == PROT_SR:
-            return SelectiveRepeat(
-                self.peer, self.num_seq, self.client_num_seq, self.client_addr, is_verbose)
-        return StopAndWait(self.peer, self.num_seq,
-                           self.client_num_seq, self.client_addr, is_verbose)
+            return SelectiveRepeat(self.peer, self.client_num_seq, self.client_addr, is_verbose)
+        return StopAndWait(self.peer, self.client_num_seq, self.client_addr, is_verbose)
 
     def _check_prot_type(self, client_prot_type, server_prot_type):
         if client_prot_type != server_prot_type:

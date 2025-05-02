@@ -2,141 +2,112 @@ from lib.protocols.protocol_arq import *
 import time
 import socket
 
-WIN_SIZE = 4
+TIMEOUT = 1
+MAX_WIN_SIZE = 50
+
 
 class SelectiveRepeat(ProtocolARQ):
-
-    def __init__(self, socket_peer, local_seq, remote_seq, remote_adress):
-        super().__init__(socket_peer, local_seq, remote_seq, remote_adress)
-        self.win_size = WIN_SIZE  # calcular?
-        self.ack_buffer = set()
-        self.pkt_buffer = {}
-        self.sent_timers = {}
-        pass
-
-    def _split_data(self, data: bytes):
-        result = []
-        for i in range(0, len(data), TAM_BUFFER):
-            result.append(data[i:i + TAM_BUFFER])
-        return result
-
-    def expired_pkts(self):
-        current_time = time.time()
-        expired = [pkt for pkt, time in self.sent_timers.items() if time + TIMEOUT <= current_time]
-        
-        for expired_pkt in expired:
-            del self.sent_timers[expired_pkt]
-
-        return expired
-
-    def send(self, data: bytes):        
-        current_seq = 0
-
+    def send(self, data: bytes):
+        current_sn = self.remote_sn
         if len(data) == 0:
-            # enviando ack de despedida
-            ack = current_seq.to_bytes(1, byteorder='big')
-            self.socket.sendto(ack, self.adress)
+            self._send_ack(current_sn)
             return
 
-        packages = self._split_data(data) # divido la data en paquetes
+        self._print_if_verbose(f"Data size to send: {len(data)}")
 
-        while current_seq < len(packages):
-            # envio aquellos paquetes dentro de la window para los cuales: no estoy esperando ack y no he recibido ack
-            for pkt_id in range(current_seq, min(current_seq + WIN_SIZE, len(packages))):
-                if pkt_id in self.sent_timers or pkt_id in self.ack_buffer:
+        data_chunks = self._split_data(data)
+        ack_buffer = set()
+        win_size = self._set_win_size(len(data_chunks))
+        timers = {}
+        while current_sn < len(data_chunks):
+            # Enviar segmentos dentro de la window para los cuales:
+            # no estoy esperando ack y no he recibido ack
+            win_end = min(current_sn + win_size, len(data_chunks))
+            for sn in range(current_sn, win_end):
+                if sn in timers or sn in ack_buffer:
                     continue
-                print(f"enviando pkt: {pkt_id}")
-                self._send_seq_segment(pkt_id, packages[pkt_id])                
+                self._send_segment(sn, data_chunks[sn])
+                timers[sn] = time.time()
 
-            print("espero recibir ack")
-            rcv_pkt, _ = self.socket.recvfrom(1)
-            ack = int.from_bytes(rcv_pkt[:1], byteorder='big')
-            print("recibo ack:", ack)
+            ack = self._recv_ack()
+            self._print_if_verbose(f"{IND}ACK expected: {current_sn}")
+            self._print_if_verbose(f"{IND}ACK received: {ack}")
+            if ack < current_sn:
+                self._print_if_verbose(f"{IND}Received duplicated ACK.")
+            elif ack > current_sn:
+                ack_buffer.add(ack)
+                self._print_if_verbose(f"{IND}Received out of order ACK. Buffered.")
+            else:
+                self._print_if_verbose(f"{IND}Received expected ACK.")
+                current_sn = self._update_current_sn(ack, ack_buffer)
+                del timers[ack]
             
-            if ack == current_seq: # recibimos el ack esperado, deslizamos la ventana
-                current_seq += 1
-                while current_seq in self.ack_buffer:
-                    self.ack_buffer.remove(current_seq)
-                    current_seq += 1
-            else: # recibimos otro ack, lo almacenamos
-                self.ack_buffer.add(ack)
-                print(f"no recibi el ack esperado, almaceno en buffer (ack: {ack})")
+            # Reenviar segmentos expirados
+            for sn in list(timers):
+                if timers[sn] + TIMEOUT <= time.time():
+                    self._print_if_verbose(f"{IND}Resending expired segment with ACK {sn}.")
+                    self._send_segment(sn, data_chunks[sn])
+                    timers[sn] = time.time()
 
-            del self.sent_timers[ack]
-
-            # reenviar paquetes expirados
-            for expired_pkt_id in self.expired_pkts():
-                print("reenvio paquete expirado:", expired_pkt_id)
-                self._send_seq_segment(expired_pkt_id, packages[expired_pkt_id])
-
-    def _send_seq_segment(self, pkt_id, segment: bytes):
-        seq_id_b = pkt_id.to_bytes(1, byteorder='big')
-        pkt = seq_id_b + segment  # [1 + TAMBUFFER]
-        self.socket.sendto(pkt, self.adress)
-        self.sent_timers[pkt_id] = time.time() # establezco un timeout para el recibimiento del ack
-
-    def receive(self, total_size) -> bytearray:
-        expected_seq = 0
-        buffer = bytearray()
+    def receive(self, max_data_size) -> bytearray:
+        expected_sn = self.remote_sn
+        segments_buffer = {}
+        data = bytearray()
         bytes_received = 0
-
-        least_pkt_buffered = -1
-        must_end = False
-        while bytes_received < total_size:
-            try:
-                print("esperando recibir")
-                packet, _ = self.socket.recvfrom(1 + TAM_BUFFER)
-                seq = int.from_bytes(packet[:1], byteorder='big')
-                payload = packet[1:]
-
-                # recibimos el paquete esperado
-                if seq == expected_seq:
-                    print(f"Leo en payload:   {len(payload)}")
-                    buffer.extend(payload)
-                    bytes_received += len(payload)
-                    
-                    # ademas el paquete esperado era el ultimo
-                    if len(payload) < TAM_BUFFER:
-                        must_end = True        
-                    else:
-                        # deslizamos la ventana
-                        expected_seq += 1
-                        while expected_seq in self.pkt_buffer:
-                            buffer.extend(self.pkt_buffer.pop(expected_seq))
-
-                            if expected_seq == least_pkt_buffered: # Llegamos al ultimo paquete (que teniamos bufereado)
-                                must_end = True
-
-                            expected_seq += 1         
-
-                else: # recibimos otro paquete, lo almacenamos
-                    print(f"no recibi el pkt esperado, almaceno en buffer (pkt: {seq})")
-                    self.pkt_buffer[seq] = payload
-                    if len(payload) < TAM_BUFFER:
-                        least_pkt_buffered = seq
-
-                ack = seq.to_bytes(1, byteorder='big')
-                self.socket.sendto(ack, self.adress)
-                print("envio ack:", seq)
-
-                if must_end:
-                    return buffer                      
-
-            except socket.timeout:
-                print("[Error]: Timeout receive")
-                ack = (1 - self.local_seq).to_bytes(1, byteorder='big')
-                self.socket.sendto(ack, self.adress)
         
-        return buffer
+        last_segment_acked = -1
+        while bytes_received < max_data_size:
+            try:
+                seq_num, payload = self._recv_segment()
+                self._print_if_verbose(f"Sequence number expected: {expected_sn}")
+                self._print_if_verbose(f"Sequence number received: {seq_num}")
 
+                if seq_num < expected_sn:
+                    self._print_if_verbose(f"{IND}Received duplicated sequence number.")
+                elif seq_num > expected_sn:
+                    segments_buffer[seq_num] = payload
+                    self._print_if_verbose(f"{IND}Received out of order sequence number. Buffered.")
+                    self._send_ack(seq_num)
+                else:
+                    self._print_if_verbose(f"Received expected sequence number.")
+                    data.extend(payload)
+                    bytes_received += len(payload)
+                    self._send_ack(seq_num)
+                    last_segment_acked = seq_num
+                    if len(payload) < DATA_CHUNK_SIZE:
+                        return data
+                    
+                    # Guardar segmentos consecutivos que estaban en el buffer
+                    expected_sn = seq_num + 1
+                    while expected_sn in segments_buffer:
+                        data.extend(segments_buffer.pop(expected_sn))
+                        expected_sn += 1
+            except socket.timeout:
+                print("[ERROR]: Timeout")
+                if last_segment_acked >= 0:
+                    self._send_ack(last_segment_acked)
+        return data
 
-    def _send_segment(self, segment):
-        pass
-    def _recv_segment(self):
-        pass
+    def _set_win_size(self, num_segments):
+        half = num_segments // 2
+        return min(MAX_WIN_SIZE, max(1, half))
 
-    def _formated_first_pkt_client(name, type_client, seq) -> str:
-        return f"{seq}|{type_client}|sr|{name}"
+    def _update_current_sn(self, ack_received, ack_buffer):
+        current_sn = ack_received + 1
+        while current_sn in ack_buffer:
+            ack_buffer.remove(current_sn)
+            current_sn += 1
+        return current_sn
 
-    def stop(self):
-        self.socket.close()
+    def _get_expired_segments_sn(self, timers):
+        current_time = time.time()
+        
+        expired_segments_sn = []
+        for segment_sn, segment_time in timers.items():
+            if segment_time + TIMEOUT <= current_time:
+                expired_segments_sn.append(segment_sn)
+        
+        for exp in expired_segments_sn:
+            del timers[exp]
+
+        return expired_segments_sn
