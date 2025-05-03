@@ -63,10 +63,10 @@ class SelectiveRepeat(ProtocolARQ):
                 self._print_if_verbose(f"Sequence number received: {seq_num}")
 
                 if seq_num < expected_sn:
-                    self._print_if_verbose(f"{IND}Received duplicated sequence number.")
+                    self._print_if_verbose(f"Received duplicated sequence number.")
                 elif seq_num > expected_sn:
                     segments_buffer[seq_num] = payload
-                    self._print_if_verbose(f"{IND}Received out of order sequence number. Buffered.")
+                    self._print_if_verbose(f"Received out of order sequence number. Buffered.")
                     self._send_ack(seq_num)
                 else:
                     self._print_if_verbose(f"Received expected sequence number.")

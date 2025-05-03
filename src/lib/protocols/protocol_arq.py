@@ -21,7 +21,7 @@ class ProtocolARQ:
 
     def _send_segment(self, segment_sn, data_chunk: bytes):
         self._print_if_verbose(f"{IND}{DELIM}")
-        self._print_if_verbose(f"{IND}Segment size to send: {len(data_chunk)}")
+        self._print_if_verbose(f"{IND}Segment size to send: {1 + len(data_chunk)}")
         
         seq_num_byte = segment_sn.to_bytes(1, byteorder='big')
         segment = seq_num_byte + data_chunk
