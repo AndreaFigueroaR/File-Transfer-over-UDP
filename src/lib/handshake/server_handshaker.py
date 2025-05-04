@@ -35,7 +35,7 @@ class ServerHandshaker:
                 continue
             return ack.decode()
         raise ConnectionError(
-            "[Error]: tried to reach the server several times without response")
+            "tried to reach the server several times without response")
 
     def _pkt_to_send(self, client_num_seq) -> str:
         return f"{self.num_seq}|{client_num_seq}".encode()

@@ -35,9 +35,9 @@ class Client:
             rdt.start(self.prot_type, client_type, srv_file_name, self.is_verbose)
             self._dispatch_client(rdt, client_type, client_file_path, srv_file_name)
         except ValueError as error:
-            print(f"Error: {error}")
+            print(f"[ERROR]: {error}")
         except ConnectionError as e:
-            print(f"Error at handshake: {e}")
+            print(f"[ERROR]: {e}")
             return
         except Exception as e:
             print(f"Unknown error: {e}")
@@ -81,7 +81,7 @@ class Client:
 
     def _recv_file(self, rdt, file):
         while True:
-            data = rdt.receive(CHUNK_SIZE)
+            data = rdt.receive()
             file.write(data)
-            if len(data) < CHUNK_SIZE:
+            if not data:
                 break

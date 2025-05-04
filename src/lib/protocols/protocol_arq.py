@@ -1,5 +1,6 @@
 from abc import abstractmethod
 
+HEADER_SIZE = 3
 DATA_CHUNK_SIZE = 256
 DELIM = "-----------------------------------"
 IND = "     "

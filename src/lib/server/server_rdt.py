@@ -3,7 +3,7 @@ from lib.handshake.server_handshaker import ServerHandshaker
 from lib.protocols.selective_repeat import SelectiveRepeat
 from lib.protocols.stop_and_wait import StopAndWait
 
-TIME_OUT = 0.1
+TIME_OUT = 0.3
 PROT_SR = "sr"
 
 
@@ -24,8 +24,8 @@ class ServerRDT:
     def send(self, data):
         self.protocol.send(data)
 
-    def receive(self, sz) -> bytearray:
-        return self.protocol.receive(sz)
+    def receive(self) -> bytearray:
+        return self.protocol.receive()
 
     def stop(self):
         self.protocol.stop()

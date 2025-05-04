@@ -65,15 +65,14 @@ class Server:
             client_type, srv_file_name = app_data.split('|')
             self._dispatch_client(rdt, client_type, srv_file_name)
         except ValueError as error:
-            print(f"Error meeting client: {error}")
+            print(f"[ERROR]: {error}")
         except ConnectionError as e:
-            print(f"Error at handshake: {e}")
+            print(f"[ERROR]: {e}")
             return
         except Exception as e:
             print(f"Unknown error: {e}")
         if rdt:
             rdt.stop()
-
 
     def _dispatch_client(self, rdt, client_type, srv_file_name):
         if client_type == UPLOAD:
@@ -98,9 +97,9 @@ class Server:
 
     def _recv_file(self, rdt, file):
         while True:
-            data = rdt.receive(CHUNK_SIZE)
+            data = rdt.receive()
             file.write(data)
-            if len(data) < CHUNK_SIZE:
+            if not data:
                 break
 
     def _send_file(self, rdt, file):

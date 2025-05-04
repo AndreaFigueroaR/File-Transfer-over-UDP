@@ -43,7 +43,7 @@ class ClientHandshaker:
             srv_num_seq, ack = data_handshake.decode().split("|", 1)
             return srv_num_seq, ack
         raise ConnectionError(
-            "[Error]: tried to reach the server several times without response")
+            "tried to reach the server several times without response")
 
     def _formatted_client_data(
             self, client_type, client_prot_type, srv_file_name) -> str:
