@@ -39,9 +39,11 @@ class StopAndWait(ProtocolARQ):
         bytes_received = 0
         data = bytearray()
         expected_sn = FIRST_SN
-        while True:
+        attemps = 0
+        while attemps < NUM_ATTEMPS // 2:
             try:
                 sn, payload = self._recv_segment()
+                attemps = 0
 
                 # TODO: refactor. En lugar de usar un ACK distinto de 0 y 1, 
                 # podríamos agregar una flag en el header (seteada en 1 si es
@@ -62,4 +64,6 @@ class StopAndWait(ProtocolARQ):
                 self._print_if_verbose(f"Payload size: {len(payload)}")
                 self._print_if_verbose(f"Total payload bytes received: {bytes_received}")
             except socket.timeout:
+                attemps += 1
                 self._print_if_verbose("TIMEOUT: Try again")
+        return data

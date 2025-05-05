@@ -74,21 +74,27 @@ class Client:
         return client_file_name
 
     def _send_file(self, rdt, file):
+        start = time.time()
+        bytes_sended = 0
         while True:
             data = file.read(CHUNK_SIZE)
             rdt.send(data)
+            bytes_sended += len(data)
+            print(f"[FILE]: Data chunk bytes sended: {bytes_sended}")
             if not data:
                 break
+        elapsed = time.time() - start
+        print(f"[FILE]: Total bytes sended {bytes_sended} in {elapsed:.3f} s")
 
     def _recv_file(self, rdt, file):
         start = time.time()
         bytes_received = 0
         while True:
             data = rdt.receive()
+            file.write(data)
             if not data:
                 break
-            file.write(data)
             bytes_received += len(data)
-            print(f"Data chunk bytes received: {bytes_received}")
+            print(f"[FILE]: Data chunk bytes received: {bytes_received}")
         elapsed = time.time() - start
-        print(f"Total bytes received {bytes_received} in {elapsed:.3f} s")
+        print(f"[FILE]: Total bytes received {bytes_received} in {elapsed:.3f} s")
