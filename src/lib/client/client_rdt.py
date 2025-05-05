@@ -3,7 +3,7 @@ from lib.handshake.client_handshaker import ClientHandshaker
 from lib.protocols.selective_repeat import SelectiveRepeat
 from lib.protocols.stop_and_wait import StopAndWait
 
-TIME_OUT = 0.3
+TIME_OUT = 0.01
 PROT_SR = "sr"
 
 
@@ -26,7 +26,7 @@ class ClientRDT:
         return self.protocol.receive()
 
     def stop(self):
-        self.protocol.stop()
+        self.skt.close()
 
     def _init_protocol(self, prot_type, is_verbose):
         if prot_type == PROT_SR:
