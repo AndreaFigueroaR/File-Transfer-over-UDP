@@ -1,6 +1,7 @@
 import os
 import socket
 import threading
+import time
 
 from lib.server.server_rdt import ServerRDT
 
@@ -38,11 +39,12 @@ class Server:
         try:
             while True:
                 client_data, client_addr = self.skt_acceptor.recvfrom(TAM_BUFFER)
-                client_thread = threading.Thread(
-                    target=self._handle_client, args=(
-                        client_data, client_addr))
-                client_thread.start()
-                self.clients[client_addr] = client_thread
+                if client_addr not in self.clients:
+                    client_thread = threading.Thread(
+                        target=self._handle_client, args=(
+                            client_data, client_addr))
+                    client_thread.start()
+                    self.clients[client_addr] = client_thread
                 self._reap_dead()
         except KeyboardInterrupt:
             self.skt_acceptor.close()
@@ -96,13 +98,20 @@ class Server:
         print("[INFO] File sended")
 
     def _recv_file(self, rdt, file):
+        start = time.time()
+        bytes_received = 0
         while True:
             data = rdt.receive()
-            file.write(data)
             if not data:
                 break
+            file.write(data)
+            bytes_received += len(data)
+            print(f"Data chunk bytes received: {bytes_received}")
+        elapsed = time.time() - start
+        print(f"Total bytes received {bytes_received} in {elapsed:.3f} s")
 
     def _send_file(self, rdt, file):
+        
         while True:
             data = file.read(CHUNK_SIZE)
             rdt.send(data)
