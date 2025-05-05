@@ -102,11 +102,11 @@ class Server:
         bytes_received = 0
         while True:
             data = rdt.receive()
+            print(f"[FILE]: Data chunk bytes received: {len(data)}")
             if not data:
                 break
             file.write(data)
             bytes_received += len(data)
-            print(f"[FILE]: Data chunk bytes received: {bytes_received}")
         elapsed = time.time() - start
         print(f"[FILE]: Total bytes received {bytes_received} in {elapsed:.3f} s")
 
@@ -117,7 +117,7 @@ class Server:
             data = file.read(CHUNK_SIZE)
             rdt.send(data)
             bytes_sended += len(data)
-            print(f"[FILE]: Data chunk bytes sended: {bytes_sended}")
+            print(f"[FILE]: Data chunk bytes sended: {len(data)}")
             if not data:
                 break
         elapsed = time.time() - start

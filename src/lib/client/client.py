@@ -70,7 +70,7 @@ class Client:
     def _get_client_file_name(self, client_file_path, srv_file_name):
         client_file_name = os.path.basename(client_file_path)
         if not client_file_name:
-            client_file_name = srv_file_name
+            client_file_name = os.path.basename(srv_file_name)
         return client_file_name
 
     def _send_file(self, rdt, file):
@@ -80,7 +80,7 @@ class Client:
             data = file.read(CHUNK_SIZE)
             rdt.send(data)
             bytes_sended += len(data)
-            print(f"[FILE]: Data chunk bytes sended: {bytes_sended}")
+            print(f"[FILE]: Data chunk bytes sended: {len(data)}")
             if not data:
                 break
         elapsed = time.time() - start
@@ -95,6 +95,6 @@ class Client:
             if not data:
                 break
             bytes_received += len(data)
-            print(f"[FILE]: Data chunk bytes received: {bytes_received}")
+            print(f"[FILE]: Data chunk bytes received: {len(data)}")
         elapsed = time.time() - start
         print(f"[FILE]: Total bytes received {bytes_received} in {elapsed:.3f} s")

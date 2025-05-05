@@ -33,7 +33,10 @@ class ServerHandshaker:
                 ack, self.client_addr = skt_peer.recvfrom(TAM_BUFFER)
             except socket.timeout:
                 continue
-            return ack.decode()
+            print("Decodeo 1")
+            dec = ack.decode()
+            print("Decodeo 2")
+            return dec
         raise ConnectionError(
             "tried to reach the server several times without response")
 
