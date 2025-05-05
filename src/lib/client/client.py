@@ -1,4 +1,5 @@
 import os
+import time
 
 from lib.client.client_rdt import ClientRDT
 
@@ -80,8 +81,14 @@ class Client:
                 break
 
     def _recv_file(self, rdt, file):
+        start = time.time()
+        bytes_received = 0
         while True:
             data = rdt.receive()
-            file.write(data)
             if not data:
                 break
+            file.write(data)
+            bytes_received += len(data)
+            print(f"Data chunk bytes received: {bytes_received}")
+        elapsed = time.time() - start
+        print(f"Total bytes received {bytes_received} in {elapsed:.3f} s")
