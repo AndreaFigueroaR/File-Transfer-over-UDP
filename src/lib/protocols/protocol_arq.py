@@ -1,6 +1,5 @@
 from abc import abstractmethod
 
-HEADER_SIZE = 3
 DATA_CHUNK_SIZE = 256
 DELIM = "-----------------------------------"
 IND = "     "
@@ -55,6 +54,3 @@ class ProtocolARQ:
     def _print_if_verbose(self, msg):
         if self.is_verbose:
             print(msg)
-
-    def stop(self):
-        self.socket.close()
