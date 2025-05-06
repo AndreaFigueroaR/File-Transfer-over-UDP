@@ -13,23 +13,37 @@ class StopAndWait(ProtocolARQ):
         for chunk in data_chunks:
             self._send_data_chunk(sn, chunk)
             sn = 1 - sn
-        self._send_data_chunk(FIN, bytes())
 
-    def _send_data_chunk(self, sn, chunk):
+        #TODO: Creo que es lo mismo llamar a 
+        # self._send_segment(sn, bytes(), is_my_fin=True)
+        # porque el receiver igual permitiría rendirse a que no se reciba después de varios intentos
+        self._send_data_chunk(sn, bytes(), is_my_fin=True)
+
+
+    def _send_segment(self, segment_sn, data_segment: bytes,is_fin):
+        self._print_if_verbose(f"{IND}{DELIM}")
+        self._print_if_verbose(f"{IND}Segment size to send: {1 + len(data_segment)}")
+        
+        seq_num_byte = segment_sn.to_bytes(1, byteorder='big')
+        fin_byte = self._bool_to_byte(is_fin)
+        segment = seq_num_byte + fin_byte +data_segment
+        self.socket.sendto(segment, self.address)
+
+    def _send_data_chunk(self, sn, chunk,is_my_fin=False):
         for _ in range(NUM_ATTEMPS):
             try:
-                self._send_segment(sn, chunk)
+                self._send_segment(sn, chunk,is_my_fin)
 
-                ack = self._recv_ack()
+                is_receiver_fin, ack = self._recv_ack()
                 if ack == sn:
                     self._print_if_verbose(f"{IND}Received expected ACK: {ack}")
                     return
-                if ack == FIN:
+                if is_receiver_fin:
                     self._print_if_verbose("Reach End-Of-Data.")
                     return
                 self._print_if_verbose(f"{IND}Received unexpected ACK: {ack}")
             except socket.timeout:
-                if sn == FIN:
+                if is_my_fin:
                     self._print_if_verbose("Reach End-Of-Data.")
                     return
                 self._print_if_verbose("TIMEOUT: Try again")
@@ -42,15 +56,12 @@ class StopAndWait(ProtocolARQ):
         attemps = 0
         while attemps < NUM_ATTEMPS // 2:
             try:
-                sn, payload = self._recv_segment()
+                sn, is_fin, payload = self._recv_segment()
                 attemps = 0
 
-                # TODO: refactor. En lugar de usar un ACK distinto de 0 y 1, 
-                # podríamos agregar una flag en el header (seteada en 1 si es
-                # el ultimo segmento) y comparar sn con la flag.
-                if sn == FIN:
+                if is_fin:
                     self._print_if_verbose("Reach End-Of-Data.")
-                    self._send_ack(FIN)
+                    self._send_ack(sn, is_fin=True)
                     return data
 
                 if sn == expected_sn:
@@ -67,3 +78,30 @@ class StopAndWait(ProtocolARQ):
                 attemps += 1
                 self._print_if_verbose("TIMEOUT: Try again")
         return data
+    
+
+
+
+    def _recv_segment(self):
+        segment, _ = self.socket.recvfrom(2 + DATA_CHUNK_SIZE)
+        seq_num = int.from_bytes(segment[0:1], byteorder='big')
+        is_fin = self._byte_to_bool(segment[1:2])
+        payload = segment[2:]
+        
+        self._print_if_verbose(DELIM)
+        self._print_if_verbose(f"Segment size recieved: {len(segment)}")
+        return seq_num, is_fin, payload
+    
+
+    def _recv_ack(self):
+        segment, _ = self.socket.recvfrom(2)
+        is_fin = self._byte_to_bool(segment[0:1])
+        ack = int.from_bytes(segment[1:2], byteorder='big')
+        return is_fin, ack
+    
+
+    def _send_ack(self, ack, is_fin=False):
+        ack_b = ack.to_bytes(1, byteorder='big')
+        is_fin_b = self._bool_to_byte(is_fin)
+        segment = is_fin_b + ack_b 
+        self.socket.sendto(segment, self.address)
