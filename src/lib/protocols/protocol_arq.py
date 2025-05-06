@@ -1,5 +1,5 @@
 from abc import abstractmethod
-
+import zlib
 DATA_CHUNK_SIZE = 256
 DELIM = "-----------------------------------"
 IND = "     "
@@ -47,3 +47,10 @@ class ProtocolARQ:
         b'\x00' → False
         """
         return bool(b[0])
+    
+    def _get_checksum_data(self, data: bytes) -> bytes:
+        """
+        Encripta los datos usando XOR con una clave fija. Devuelve 4 bytes.
+        """
+        crc = zlib.crc32(data) & 0xFFFFFFFF
+        return crc.to_bytes(4, byteorder='big')
