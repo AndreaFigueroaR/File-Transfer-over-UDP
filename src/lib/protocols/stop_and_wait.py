@@ -1,4 +1,5 @@
 from lib.protocols.protocol_arq import *
+from typing import Optional, Tuple
 import socket
 
 NUM_ATTEMPS = 10
@@ -25,8 +26,9 @@ class StopAndWait(ProtocolARQ):
         self._print_if_verbose(f"{IND}Segment size to send: {1 + len(data_segment)}")
         
         seq_num_byte = segment_sn.to_bytes(1, byteorder='big')
+        checksum_bytes = self._get_checksum_data(data_segment)
         fin_byte = self._bool_to_byte(is_fin)
-        segment = seq_num_byte + fin_byte +data_segment
+        segment = seq_num_byte + checksum_bytes + fin_byte +data_segment
         self.socket.sendto(segment, self.address)
 
     def _send_data_chunk(self, sn, chunk,is_my_fin=False):
@@ -56,7 +58,10 @@ class StopAndWait(ProtocolARQ):
         attemps = 0
         while attemps < NUM_ATTEMPS // 2:
             try:
-                sn, is_fin, payload = self._recv_segment()
+                resultado = self._recv_segment()
+                if resultado is None:
+                    continue
+                sn, is_fin, payload = resultado
                 attemps = 0
 
                 if is_fin:
@@ -80,13 +85,19 @@ class StopAndWait(ProtocolARQ):
         return data
     
 
+    def _recv_segment(self) -> Optional[Tuple[int, bool, bytes]]:
+        segment, _ = self.socket.recvfrom(6 + DATA_CHUNK_SIZE)
+        checksum_received = segment[1:5]
+        payload = segment[6:]
 
-
-    def _recv_segment(self):
-        segment, _ = self.socket.recvfrom(2 + DATA_CHUNK_SIZE)
+        checksum_calculated = self._get_checksum_data(segment[6:])
+        if checksum_received != checksum_calculated:
+            self._print_if_verbose(f"Checksum mismatch: {checksum_received} != {checksum_calculated}")
+            return None
+        
         seq_num = int.from_bytes(segment[0:1], byteorder='big')
-        is_fin = self._byte_to_bool(segment[1:2])
-        payload = segment[2:]
+        is_fin = self._byte_to_bool(segment[5:6])
+        
         
         self._print_if_verbose(DELIM)
         self._print_if_verbose(f"Segment size recieved: {len(segment)}")
