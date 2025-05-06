@@ -4,3 +4,4 @@ src/lib/parser/__pycache__
 src/lib/protocols/__pycache__
 src/lib/client/__pycache__
 src/lib/server/__pycache__
+src/storage
