@@ -1,6 +1,7 @@
 from lib.protocols.protocol_arq import *
 import time
 import socket
+from lib import debug
 
 TIMEOUT = 0.01
 MAX_WIN_SIZE = 4
@@ -12,8 +13,8 @@ class SelectiveRepeat(ProtocolARQ):
         self.pkt_id = 0
 
     def _send_segment_sr(self, segment_sn, pkt_id, data_chunk: bytes):
-        self._print_if_verbose(f"{IND}{DELIM}")
-        self._print_if_verbose(f"{IND}Segment size to send: {1 + 2 + len(data_chunk)}")
+        debug.log(f"{IND}{DELIM}")
+        debug.log(f"{IND}Segment size to send: {1 + 2 + len(data_chunk)}")
         
         seq_num_byte = segment_sn.to_bytes(1, byteorder='big')
         pkt_id_byte = pkt_id.to_bytes(2, byteorder='big')
@@ -29,7 +30,7 @@ class SelectiveRepeat(ProtocolARQ):
     def send(self, data: bytes):
         current_sn = 0
         
-        self._print_if_verbose(f"Data size to send: {len(data)}")
+        debug.log(f"Data size to send: {len(data)}")
 
         data_segments = self._split_data(data)
         data_segments.append(bytes()) # Agrego el final (segment vacio)
@@ -51,21 +52,21 @@ class SelectiveRepeat(ProtocolARQ):
             try:
                 ack, ack_pkt_id = self._recv_ack_sr()
                 attempts = 0
-                self._print_if_verbose(f"{IND}ACK expected: {current_sn}")
-                self._print_if_verbose(f"{IND}ACK received: {ack}")
+                debug.log(f"{IND}ACK expected: {current_sn}")
+                debug.log(f"{IND}ACK received: {ack}")
                 
                 if ack_pkt_id < self.pkt_id:
                     continue
 
                 if ack < current_sn:
-                    self._print_if_verbose(f"{IND}Received duplicated ACK.")
+                    debug.log_warning(f"{IND}Received duplicated ACK.")
                 if ack > current_sn:
                     ack_buffer.add(ack)
-                    self._print_if_verbose(f"{IND}Received out of order ACK. Buffered.")
+                    debug.log_warning(f"{IND}Received out of order ACK. Buffered.")
                     total_sent += len(data_segments[ack])
                     del timers[ack]
                 else:
-                    self._print_if_verbose(f"{IND}Received expected ACK.")
+                    debug.log(f"{IND}Received expected ACK.")
                     current_sn = self._update_current_sn(ack, ack_buffer)
                     total_sent += len(data_segments[ack])
                     del timers[ack]
@@ -73,20 +74,19 @@ class SelectiveRepeat(ProtocolARQ):
                 if current_sn == len(data_segments) - 1:
                     attempts += 1
                     if(attempts == NUM_ATTEMPS):
-                        print("[TIMEOUT] Esperando ack de fin")
-                        self._print_if_verbose(f"{IND}[TIMEOUT] Esperando ack de FIN ({current_sn})")
+                        debug.log_warning(f"{IND}[TIMEOUT] Esperando ack de FIN ({current_sn})")
                         break
-                self._print_if_verbose(f"{IND}[TIMEOUT] Esperando ack ({current_sn})")
+                debug.log_warning(f"{IND}[TIMEOUT] Esperando ack ({current_sn})")
                     
             print("Reviso timout de paquetes eviados")
             # Resend expired segments
             for sn in list(timers):
                 if timers[sn] + TIMEOUT <= time.time():
-                    self._print_if_verbose(f"{IND}Resending expired segment with ACK {sn}.")
+                    debug.log(f"{IND}Resending expired segment with ACK {sn}.")
                     self._send_segment_sr(sn, self.pkt_id, data_segments[sn])
                     timers[sn] = time.time()
         self.pkt_id += 1
-        print("TOTAL SENT: ", total_sent)
+        debug.log(f"TOTAL SENT: {total_sent}")
 
     def _recv_segment_sr(self):
         segment, _ = self.socket.recvfrom(1 + 2 + DATA_CHUNK_SIZE)
@@ -94,15 +94,14 @@ class SelectiveRepeat(ProtocolARQ):
         pkt_id = int.from_bytes(segment[1:3], byteorder='big')
         payload = segment[3:]
         
-        self._print_if_verbose(DELIM)
-        self._print_if_verbose(f"{IND}Segment size recieved: {len(segment)}")
+        debug.log(DELIM)
+        debug.log(f"{IND}Segment size recieved: {len(segment)}")
         return seq_num, pkt_id, payload
     
     def receive(self) -> bytearray:
         expected_sn = 0
         segments_buffer = {}
         data = bytearray()
-        bytes_received = 0
         
         end_segment_buffered = -1
         attempts = 0
@@ -112,26 +111,24 @@ class SelectiveRepeat(ProtocolARQ):
                 #attempts = 0
                 if self.pkt_id != pkt_id:
                     self._send_ack_sr(seq_num, pkt_id)
-                    self._print_if_verbose(f"{IND}ME LLEGO UN PAQUETE ANTERIOR, CURRENT_PKG: {self.pkt_id}. REC > PKG:{pkt_id}, SEQ:{seq_num}, LEN_PAYLOAD: {len(payload)}")
+                    debug.log_warning(f"{IND}ME LLEGO UN PAQUETE ANTERIOR, CURRENT_PKG: {self.pkt_id}. REC > PKG:{pkt_id}, SEQ:{seq_num}, LEN_PAYLOAD: {len(payload)}")
                     continue
 
-                self._print_if_verbose(f"{IND}Sequence number expected: {expected_sn}")
-                self._print_if_verbose(f"{IND}Sequence number received: {seq_num}")
+                debug.log(f"{IND}Sequence number expected: {expected_sn}")
+                debug.log(f"{IND}Sequence number received: {seq_num}")
 
                 if seq_num < expected_sn:
-                    self._print_if_verbose(f"{IND}Received duplicated sequence number.")
+                    debug.log_warning(f"{IND}Received duplicated sequence number.")
                 elif seq_num > expected_sn:
                     if (seq_num, self.pkt_id) not in segments_buffer:
-                        bytes_received += len(payload)
                         segments_buffer[(seq_num, self.pkt_id)] = payload
                         if len(payload) == 0:
                             end_segment_buffered = seq_num
-                    self._print_if_verbose(f"{IND}Received out of order sequence number. Buffered (if was not).")
+                    debug.log_warning(f"{IND}Received out of order sequence number. Buffered (if was not).")
                     self._send_ack_sr(seq_num, pkt_id)
                 else:
-                    self._print_if_verbose(f"{IND}Received expected sequence number.")
+                    debug.log(f"{IND}Received expected sequence number.")
                     data.extend(payload)
-                    bytes_received += len(payload)
                     self._send_ack_sr(seq_num, pkt_id)
 
                     if len(payload) == 0:
@@ -147,10 +144,10 @@ class SelectiveRepeat(ProtocolARQ):
                             return data
                         expected_sn += 1
             except socket.timeout:
-                self._print_if_verbose(f"{IND}[ERROR]: Timeout")
+                debug.log_error(f"{IND}[ERROR]: Timeout")
                 attempts += 1
 
-        self._print_if_verbose(f"{IND}CORTO POR ATTEMPTS")
+        debug.log_warning(f"{IND}CORTO POR ATTEMPTS")
         self.pkt_id += 1
         return data
     def _send_ack_sr(self, ack, pkt_id):
