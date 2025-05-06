@@ -12,7 +12,7 @@ TAM_BUFFER = 1024
 UPLOAD = 'U'
 DOWNLOAD = 'D'
 
-CHUNK_SIZE = 1024
+FILE_CHUNK_SIZE = 1024
 
 
 class Server:
@@ -114,7 +114,7 @@ class Server:
         start = time.time()
         bytes_sended = 0
         while True:
-            data = file.read(CHUNK_SIZE)
+            data = file.read(FILE_CHUNK_SIZE)
             rdt.send(data)
             bytes_sended += len(data)
             print(f"[FILE]: Data chunk bytes sended: {len(data)}")
