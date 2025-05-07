@@ -124,3 +124,7 @@ Ten en cuenta que :
 - Si usas rutas relativas la ruta esolverá desde el directorio raiz (lo mismo que siempre tener que poner rutas absolutas).
 Además:
 - No uses en dos hosts distintos mismos puertos
+
+## Fuentes
+
+La topología de red para la fragmentación y el packet loss fue tomada del repositorio [LinearEnds topology use](https://github.com/gabrieldiem/linear-ends-topology-with-ip-frag).
