@@ -14,11 +14,12 @@ class ServerRDT:
         self.peer.settimeout(TIME_OUT)
         self.protocol = None
 
-    def meet_client(self, client_data, prot_type, is_verbose) -> str:
+    def meet_client(self, client_data, prot_type) -> str:
         handshaker = ServerHandshaker(self.client_addr)
-        client_prot_type, app_data = handshaker.handshake(client_data, self.peer)
+        client_prot_type, app_data = handshaker.handshake(
+            client_data, self.peer)
         self._check_prot_type(client_prot_type, prot_type)
-        self.protocol = self._init_protocol(prot_type, is_verbose)
+        self.protocol = self._init_protocol(prot_type)
         return app_data
 
     def send(self, data):
@@ -30,10 +31,10 @@ class ServerRDT:
     def stop(self):
         self.peer.close()
 
-    def _init_protocol(self, prot_type, is_verbose):
+    def _init_protocol(self, prot_type):
         if prot_type == PROT_SR:
-            return SelectiveRepeat(self.peer, self.client_addr, is_verbose)
-        return StopAndWait(self.peer, self.client_addr, is_verbose)
+            return SelectiveRepeat(self.peer, self.client_addr)
+        return StopAndWait(self.peer, self.client_addr)
 
     def _check_prot_type(self, client_prot_type, prot_type):
         if client_prot_type != prot_type:
