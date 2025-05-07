@@ -120,19 +120,11 @@ class Server:
 
         while True:
             data = file.read(FILE_CHUNK_SIZE)
-            # SEPARATION OF EDING OF CONNECTION
-            # if not data:
-            #    break
-            # bytes_sended += len(data)
-            # rdt.send(data)
-
-            # EXISTING IMPLEMENTATION
-            rdt.send(data)
-            bytes_sended += len(data)
-            print(f"[FILE]: Data chunk bytes sended: {len(data)}")
             if not data:
-                break
-        # rdt.shutdown()
+               break
+            bytes_sended += len(data)
+            rdt.send(data)
+        rdt.send(bytes())
         elapsed = time.time() - start
         print(f"[FILE]: Total bytes sended {bytes_sended} in {elapsed:.3f} s")
 
