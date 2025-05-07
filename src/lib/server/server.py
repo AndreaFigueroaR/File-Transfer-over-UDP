@@ -41,6 +41,7 @@ class Server:
                 client_data, client_addr = self.skt_listener.recvfrom(
                     TAM_BUFFER)
                 if client_addr not in self.clients:
+                    debug.log_result(f"[NEW CLIENT]: got request of conection of host: {client_addr}")
                     client_thread = threading.Thread(
                         target=self._handle_client, args=(
                             client_data, client_addr))
@@ -69,6 +70,8 @@ class Server:
             app_data = rdt.meet_client(client_data, self.prot_type)
             client_type, srv_file_name = self.deserialize_app_data(app_data)
             self._dispatch_client(rdt, client_type, srv_file_name)
+            debug.log_result(f"Connection with client{client_addr} ended orderly")
+
         except ValueError as error:
             print(f"[ERROR]: {error}")
         except ConnectionError as e:

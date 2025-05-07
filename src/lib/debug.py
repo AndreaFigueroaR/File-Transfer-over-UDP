@@ -13,4 +13,9 @@ def log_warning(msg):
 
 def log_error(msg):
     if verbose:
-        print("\033[91m" + msg + "\033[0m")
+        print("\033[31m" + msg + "\033[0m")
+
+
+def log_result(msg):
+    if verbose:
+        print("\033[32m" + msg + "\033[0m")
