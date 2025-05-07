@@ -19,8 +19,8 @@ class Server:
     def __init__(self, host, port, protocol, storage):
         self.addr = (host, port)
 
-        self.skt_acceptor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.skt_acceptor.bind(self.addr)
+        self.skt_listener = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.skt_listener.bind(self.addr)
         print(
             f"[INFO] Server listening in IP: {host}, PORT:{port} using protocol {protocol}")
 
@@ -38,7 +38,7 @@ class Server:
         try:
             while True:
                 self._reap_dead()
-                client_data, client_addr = self.skt_acceptor.recvfrom(
+                client_data, client_addr = self.skt_listener.recvfrom(
                     TAM_BUFFER)
                 if client_addr not in self.clients:
                     client_thread = threading.Thread(
@@ -48,7 +48,7 @@ class Server:
                     self.clients[client_addr] = client_thread
 
         except KeyboardInterrupt:
-            self.skt_acceptor.close()
+            self.skt_listener.close()
         finally:
             self._clear()
 
