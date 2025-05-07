@@ -147,6 +147,7 @@ class SelectiveRepeat(ProtocolARQ):
                 if seq_num < expected_sn:
                     debug.log_warning(
                         f"{IND}Received duplicated sequence number.")
+                    self._send_ack_sr(seq_num, pkt_id)
                 elif seq_num > expected_sn:
                     if (seq_num, self.pkt_id) not in segments_buffer:
                         segments_buffer[(seq_num, self.pkt_id)] = payload
