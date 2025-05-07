@@ -1,5 +1,5 @@
 from abc import abstractmethod
-DATA_CHUNK_SIZE = 256
+DATA_CHUNK_SIZE = 1024
 DELIM = "-----------------------------------"
 IND = "     "
 

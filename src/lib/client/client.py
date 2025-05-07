@@ -8,7 +8,7 @@ DOWNLOAD = 'D'
 
 READ_BINARY = "rb"
 WRITE_BINARY = "wb"
-FILE_CHUNK_SIZE = 1024
+FILE_CHUNK_SIZE = 4096
 
 
 class Client:
