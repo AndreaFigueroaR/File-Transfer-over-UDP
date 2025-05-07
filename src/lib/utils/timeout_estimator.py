@@ -1,6 +1,7 @@
 import socket
 import time
 
+
 def estimate_timeout(sock, remote_addr, is_server=False, attempts=5):
     tiempos = []
 
@@ -32,4 +33,6 @@ def estimate_timeout(sock, remote_addr, is_server=False, attempts=5):
         rtt_promedio = sum(tiempos) / len(tiempos)
         return max(0.001, rtt_promedio * 2)
     else:
-        return 0.5  #En compus rapidas es un buen default. Pero hay que probar si con este timeout cumple lo de menos de dos minutos en cualquiera. 
+        # En compus rapidas es un buen default. Pero hay que probar si con este
+        # timeout cumple lo de menos de dos minutos en cualquiera.
+        return 0.5
