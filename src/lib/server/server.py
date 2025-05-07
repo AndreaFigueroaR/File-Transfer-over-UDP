@@ -2,7 +2,7 @@ import os
 import socket
 import threading
 import time
-
+import lib.debug as debug
 from lib.server.server_rdt import ServerRDT
 
 READ_BINARY = "rb"
@@ -16,21 +16,20 @@ FILE_CHUNK_SIZE = 1024
 
 
 class Server:
-    def __init__(self, host, port, protocol, storage, is_verbose):
+    def __init__(self, host, port, protocol, storage):
         self.addr = (host, port)
-        
+
         self.skt_acceptor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.skt_acceptor.bind(self.addr)
         print(
-        f"[INFO] Server listening in IP: {host}, PORT:{port} using protocol {protocol}")
+            f"[INFO] Server listening in IP: {host}, PORT:{port} using protocol {protocol}")
 
         self.prot_type = protocol
         self.storage = storage
- 
-        self.is_verbose = is_verbose
-        if is_verbose:
+
+        if debug.verbose:
             print("[INFO] Verbose mode ON")
-        else: 
+        else:
             print("[INFO] Quiet mode ON")
 
         self.clients = {}
@@ -38,14 +37,16 @@ class Server:
     def accept_clients(self):
         try:
             while True:
-                client_data, client_addr = self.skt_acceptor.recvfrom(TAM_BUFFER)
+                self._reap_dead()
+                client_data, client_addr = self.skt_acceptor.recvfrom(
+                    TAM_BUFFER)
                 if client_addr not in self.clients:
                     client_thread = threading.Thread(
                         target=self._handle_client, args=(
                             client_data, client_addr))
                     client_thread.start()
                     self.clients[client_addr] = client_thread
-                self._reap_dead()
+
         except KeyboardInterrupt:
             self.skt_acceptor.close()
         finally:
@@ -58,13 +59,15 @@ class Server:
                 thread.join()
                 del self.clients[client_addr]
 
+    def deserialize_app_data(self, app_data):
+        return app_data[0], app_data[1:]
 
     def _handle_client(self, client_data, client_addr):
         rdt = None
         try:
             rdt = ServerRDT(client_addr)
-            app_data = rdt.meet_client(client_data, self.prot_type, self.is_verbose)
-            client_type, srv_file_name = app_data.split('|')
+            app_data = rdt.meet_client(client_data, self.prot_type)
+            client_type, srv_file_name = self.deserialize_app_data(app_data)
             self._dispatch_client(rdt, client_type, srv_file_name)
         except ValueError as error:
             print(f"[ERROR]: {error}")
@@ -82,7 +85,6 @@ class Server:
         elif client_type == DOWNLOAD:
             self._handle_client_download(rdt, srv_file_name)
 
-
     def _handle_client_upload(self, rdt, storage, srv_file_name):
         os.makedirs(storage, exist_ok=True)
         srv_file_path = os.path.join(storage, srv_file_name)
@@ -91,6 +93,7 @@ class Server:
         print("[INFO] File received")
 
     def _handle_client_download(self, rdt, srv_file_name):
+        # envio mensaje de hanshake vacio
         if not os.path.isfile(srv_file_name):
             raise FileNotFoundError(f"File {srv_file_name} does not exist.")
         with open(srv_file_name, READ_BINARY) as file:
@@ -108,18 +111,28 @@ class Server:
             file.write(data)
             bytes_received += len(data)
         elapsed = time.time() - start
-        print(f"[FILE]: Total bytes received {bytes_received} in {elapsed:.3f} s")
+        print(
+            f"[FILE]: Total bytes received {bytes_received} in {elapsed:.3f} s")
 
     def _send_file(self, rdt, file):
         start = time.time()
         bytes_sended = 0
+
         while True:
             data = file.read(FILE_CHUNK_SIZE)
+            # SEPARATION OF EDING OF CONNECTION
+            # if not data:
+            #    break
+            # bytes_sended += len(data)
+            # rdt.send(data)
+
+            # EXISTING IMPLEMENTATION
             rdt.send(data)
             bytes_sended += len(data)
             print(f"[FILE]: Data chunk bytes sended: {len(data)}")
             if not data:
                 break
+        # rdt.shutdown()
         elapsed = time.time() - start
         print(f"[FILE]: Total bytes sended {bytes_sended} in {elapsed:.3f} s")
 
