@@ -5,9 +5,9 @@ from lib import debug
 from lib.protocols.serializer import Serializer
 from lib.protocols.config import *
 
-TIMEOUT = 0.005
+TIMEOUT = 0.0025
 MAX_WIN_SIZE = 4
-NUM_ATTEMPS = 30
+NUM_ATTEMPS = 10
 
 
 class SelectiveRepeat(ProtocolARQ):
