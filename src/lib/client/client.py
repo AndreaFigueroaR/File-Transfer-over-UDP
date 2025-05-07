@@ -104,11 +104,11 @@ class Client:
         bytes_received = 0
         while True:
             data = rdt.receive()
-            file.write(data)
+            print(f"[FILE]: Data chunk bytes received: {len(data)}")
             if not data:
                 break
+            file.write(data)
             bytes_received += len(data)
-            print(f"[FILE]: Data chunk bytes received: {len(data)}")
         elapsed = time.time() - start
         print(
             f"[FILE]: Total bytes received {bytes_received} in {elapsed:.3f} s")
