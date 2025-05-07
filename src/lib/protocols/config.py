@@ -1,7 +1,10 @@
 FIRST_SN = 0
 
+# [10% (5%/5%) Packet loss] config
 # NUM_ATTEMPS = 20
 # TIMEOUT = 0.01
+
+# [10% (5%/5%) Packet loss] + [5ms 2ms delay] config
 NUM_ATTEMPS = 80
 TIMEOUT = 0.1
 
