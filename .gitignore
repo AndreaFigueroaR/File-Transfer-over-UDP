@@ -1,7 +1,7 @@
-src/lib/handshake/__pycache__
-src/lib/__pycache__
-src/lib/parser/__pycache__
-src/lib/protocols/__pycache__
-src/lib/client/__pycache__
-src/lib/server/__pycache__
-src/storage
+# Ignorar TODOS los __pycache__ y archivos de bytecode
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignorar directorio storage (si no debe subirse)
+src/storage/
