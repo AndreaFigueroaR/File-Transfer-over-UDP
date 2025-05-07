@@ -6,6 +6,7 @@ from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 from mininet.link import TCLink
 
+
 def myNetwork():
     net = Mininet(topo=None, build=False, ipBase='10.0.0.0/8')
 
@@ -37,6 +38,7 @@ def myNetwork():
     info('*** Running CLI\n')
     CLI(net)
     net.stop()
+
 
 if __name__ == '__main__':
     setLogLevel('info')
