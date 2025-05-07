@@ -1,5 +1,11 @@
 FIRST_SN = 0
-NUM_ATTEMPS = 20
+
+# NUM_ATTEMPS = 20
+# TIMEOUT = 0.01
+NUM_ATTEMPS = 80
+TIMEOUT = 0.1
+
+MAX_WIN_SIZE = 4
 
 " SYN: 1 byte"
 " FIN: 1 byte"

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-DATA_CHUNK_SIZE = 1024
+DATA_SEGMENT_SIZE = 1024
 DELIM = "-----------------------------------"
 IND = "     "
 
@@ -19,6 +19,6 @@ class ProtocolARQ:
 
     def _split_data(self, data: bytes):
         data_chunks = []
-        for i in range(0, len(data), DATA_CHUNK_SIZE):
-            data_chunks.append(data[i:i + DATA_CHUNK_SIZE])
+        for i in range(0, len(data), DATA_SEGMENT_SIZE):
+            data_chunks.append(data[i:i + DATA_SEGMENT_SIZE])
         return data_chunks

@@ -1,7 +1,9 @@
 import zlib
+
+
 class Serializer:
     @staticmethod
-    def bool_to_byte( flag: bool) -> bytes:
+    def bool_to_byte(flag: bool) -> bytes:
         """
         Convierte un booleano a un byte:
         True  → b'\x01'
@@ -18,7 +20,7 @@ class Serializer:
         b'\x00' → False
         """
         return bool(b[0])
-    
+
     @staticmethod
     def get_checksum_data(data: bytes) -> bytes:
         """

@@ -61,14 +61,12 @@ class Client:
                 client_file_path, srv_file_name)
             self._run_client_download(rdt, storage, client_file_name)
 
-
     def _run_client_upload(self, rdt, client_src_path):
         if not os.path.isfile(client_src_path):
             raise FileNotFoundError(f"File {client_src_path} does not exist.")
         with open(client_src_path, READ_BINARY) as file:
             self._send_file(rdt, file)
         print("[INFO] File sended")
-
 
     def _run_client_download(self, rdt, storage, client_file_name):
         os.makedirs(storage, exist_ok=True)
@@ -77,13 +75,11 @@ class Client:
             self._recv_file(rdt, file)
         print("[INFO] File received")
 
-
     def _get_client_file_name(self, client_file_path, srv_file_name):
         client_file_name = os.path.basename(client_file_path)
         if not client_file_name:
             client_file_name = os.path.basename(srv_file_name)
         return client_file_name
-
 
     def _send_file(self, rdt, file):
         start = time.time()
@@ -97,7 +93,6 @@ class Client:
                 break
         elapsed = time.time() - start
         print(f"[FILE]: Total bytes sended {bytes_sended} in {elapsed:.3f} s")
-
 
     def _recv_file(self, rdt, file):
         start = time.time()

@@ -2,8 +2,8 @@ import socket
 from lib.handshake.client_handshaker import ClientHandshaker
 from lib.protocols.selective_repeat import SelectiveRepeat
 from lib.protocols.stop_and_wait import StopAndWait
+from lib.protocols.config import *
 
-TIME_OUT = 0.01
 PROT_SR = "sr"
 
 
@@ -11,7 +11,7 @@ class ClientRDT:
     def __init__(self, server_addr):
         self.srv_addr = server_addr
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.skt.settimeout(TIME_OUT)
+        self.skt.settimeout(TIMEOUT)
         self.protocol = None
 
     def stablish_connection(self, prot_type, client_type, srv_file_name):

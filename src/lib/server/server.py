@@ -121,7 +121,7 @@ class Server:
         while True:
             data = file.read(FILE_CHUNK_SIZE)
             if not data:
-               break
+                break
             bytes_sended += len(data)
             rdt.send(data)
         rdt.send(bytes())

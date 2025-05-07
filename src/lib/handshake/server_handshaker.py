@@ -12,38 +12,37 @@ class ServerHandshaker:
         self.client_addr = addr
         self.num_seq = 0
 
-
     def handshake(self, client_data, skt_peer):
-        syn, client_num_seq, client_prot_type, client_app_metadata = MessgageSerializer.first_msg_from_bytes(client_data)
+        syn, client_num_seq, client_prot_type, client_app_metadata = MessgageSerializer.first_msg_from_bytes(
+            client_data)
         if not syn:
             print("[Error]: recevie a message not expected at handshake, please retry")
-            
+
         self._check_prot_type(client_prot_type)
         self._send_msg_2(skt_peer, client_num_seq)
         return client_prot_type, client_app_metadata
 
-
-    def _send_msg_2(self, skt_peer,client_num_seq)-> int:
-        packet = MessgageSerializer.second_msg_to_bytes(self.num_seq, client_num_seq)
+    def _send_msg_2(self, skt_peer, client_num_seq) -> int:
+        packet = MessgageSerializer.second_msg_to_bytes(
+            self.num_seq, client_num_seq)
         for _ in range(NUM_ATTEMPS):
             try:
                 skt_peer.sendto(packet, self.client_addr)
                 client_data, self.client_addr = skt_peer.recvfrom(TAM_BUFFER)
             except socket.timeout:
                 continue
-        
-            if not MessgageSerializer._is_about_handhshake(client_data):# not syn 
+
+            if not MessgageSerializer._is_about_handhshake(
+                    client_data):  # not syn
                 return
-            
-            # if it is a corrupted message, it ask for the ack again 
-            _ , ack = MessgageSerializer.third_msg_from_bytes(client_data)
+
+            # if it is a corrupted message, it ask for the ack again
+            _, ack = MessgageSerializer.third_msg_from_bytes(client_data)
             if self.num_seq == ack:
                 return
-        
 
         raise ConnectionError(
             "tried to reach the server several times without response")
-
 
     def _check_prot_type(self, client_prot_type):
         if not (client_prot_type ==

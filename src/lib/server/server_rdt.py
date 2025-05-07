@@ -2,8 +2,8 @@ import socket
 from lib.handshake.server_handshaker import ServerHandshaker
 from lib.protocols.selective_repeat import SelectiveRepeat
 from lib.protocols.stop_and_wait import StopAndWait
+from lib.protocols.config import *
 
-TIME_OUT = 0.01
 PROT_SR = "sr"
 
 
@@ -11,7 +11,7 @@ class ServerRDT:
     def __init__(self, addr):
         self.client_addr = addr
         self.peer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.peer.settimeout(TIME_OUT)
+        self.peer.settimeout(TIMEOUT)
         self.protocol = None
 
     def meet_client(self, client_data, prot_type) -> str:

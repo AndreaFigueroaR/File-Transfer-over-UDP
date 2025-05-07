@@ -66,4 +66,3 @@ class MessgageSerializer:
     @staticmethod
     def _is_about_handhshake(data: bytes) -> bool:
         return MessgageSerializer._byte_to_bool(data[0:1])
-

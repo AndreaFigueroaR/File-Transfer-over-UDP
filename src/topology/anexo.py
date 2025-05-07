@@ -23,11 +23,11 @@ def myNetwork():
     h2 = net.addHost('h2', ip='10.0.0.2/8')
 
     info(' Add links (con TCLink)\n')
-    net.addLink(h1, s1,    cls=TCLink)
-    net.addLink(s1, s2,    cls=TCLink)
-    net.addLink(s2, s3,    cls=TCLink)
+    net.addLink(h1, s1, cls=TCLink)
+    net.addLink(s1, s2, cls=TCLink)
+    net.addLink(s2, s3, cls=TCLink)
 
-    net.addLink(s3, h2,    cls=TCLink, loss=10) 
+    net.addLink(s3, h2, cls=TCLink, loss=10)
 
     info(' Starting network\n')
     net.build()

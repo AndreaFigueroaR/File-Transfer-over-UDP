@@ -5,10 +5,6 @@ from lib import debug
 from lib.protocols.serializer import Serializer
 from lib.protocols.config import *
 
-TIMEOUT = 0.0025
-MAX_WIN_SIZE = 4
-NUM_ATTEMPS = 10
-
 
 class SelectiveRepeat(ProtocolARQ):
     def __init__(self, socket, remote_address):
@@ -17,7 +13,8 @@ class SelectiveRepeat(ProtocolARQ):
 
     def _send_segment_sr(self, segment_sn, pkt_id, data_segment: bytes):
         debug.log(f"{IND}{DELIM}")
-        debug.log(f"{IND}Segment size to send: {SR_SEGMENT_HEADER_SIZE + len(data_segment)}")
+        debug.log(
+            f"{IND}Segment size to send: {SR_SEGMENT_HEADER_SIZE + len(data_segment)}")
 
         syn_byte = Serializer.bool_to_byte(False)
         checksum_bytes = Serializer.get_checksum_data(data_segment)
@@ -65,7 +62,7 @@ class SelectiveRepeat(ProtocolARQ):
 
                 if ack < current_sn:
                     debug.log_warning(f"{IND}Received duplicated ACK.")
-                if ack > current_sn:
+                elif ack > current_sn:
                     ack_buffer.add(ack)
                     debug.log_warning(
                         f"{IND}Received out of order ACK. Buffered.")
@@ -96,10 +93,10 @@ class SelectiveRepeat(ProtocolARQ):
         self.pkt_id += 1
         debug.log(f"TOTAL SENT: {total_sent}")
 
-
     def _recv_segment_sr(self):
         # SYN, CHECKSUM, SEQ_NUM, PKT_ID, PAYLOAD
-        segment, _ = self.socket.recvfrom(SR_SEGMENT_HEADER_SIZE + DATA_CHUNK_SIZE)
+        segment, _ = self.socket.recvfrom(
+            SR_SEGMENT_HEADER_SIZE + DATA_SEGMENT_SIZE)
 
         if Serializer.is_about_handhshake(segment):
             return None
