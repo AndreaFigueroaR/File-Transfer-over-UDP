@@ -1,17 +1,20 @@
-from lib.protocols.protocol_arq import ProtocolARQ
-from lib.protocols.protocol_arq import IND, DELIM, DATA_SEGMENT_SIZE
 import time
 import socket
 from lib import debug
 from lib.protocols.serializer import Serializer
-from lib.protocols.config import NUM_ATTEMPS, TIMEOUT
+from lib.protocols.config import NUM_ATTEMPTS, TIMEOUT
 from lib.protocols.config import SR_SEGMENT_HEADER_SIZE, MAX_WIN_SIZE
+DATA_SEGMENT_SIZE = 1024
+DELIM = "-----------------------------------"
+IND = "     "
 
 
-class SelectiveRepeat(ProtocolARQ):
+class SelectiveRepeat:
     def __init__(self, socket, remote_address):
-        super().__init__(socket, remote_address)
+        self.socket = socket
+        self.address = remote_address
         self.pkt_id = 0
+        self.win_size = 0
 
     def _send_segment_sr(self, segment_sn, pkt_id, data_segment: bytes):
         debug.log(f"{IND}{DELIM}")
@@ -39,16 +42,17 @@ class SelectiveRepeat(ProtocolARQ):
         debug.log(f"Data size to send: {len(data)}")
 
         data_segments = self._split_data(data)
-        data_segments.append(bytes())  # Agrego el final (segment vacio)
+        data_segments.append(bytes())
         ack_buffer = set()
-        win_size = self._set_win_size(len(data_segments))
+        if self.win_size == 0:
+            self.win_size = self._calculate_win_size(len(data_segments))
         timers = {}
         total_sent = 0
         attempts = 0
         while current_sn < len(data_segments):
             # Send segments within the window for which:
             # I'm not waiting for an ACK and haven't received an ACK
-            win_end = min(current_sn + win_size, len(data_segments))
+            win_end = min(current_sn + self.win_size, len(data_segments))
             for sn in range(current_sn, win_end):
                 if sn in timers or sn in ack_buffer:
                     continue
@@ -78,12 +82,12 @@ class SelectiveRepeat(ProtocolARQ):
                     total_sent += len(data_segments[ack])
                     del timers[ack]
             except socket.timeout:
-                if current_sn == len(data_segments) - 1:
-                    attempts += 1
-                    if (attempts == NUM_ATTEMPS):
-                        debug.log_warning(f"{IND}[TIMEOUT] Esperando ack "
-                                          f"de FIN ({current_sn})")
-                        break
+                attempts += 1
+                # if current_sn == len(data_segments) - 1:
+                #     if (attempts == NUM_ATTEMPTS):
+                #         debug.log_warning(f"{IND}[TIMEOUT] Esperando ack "
+                #                           f"de FIN ({current_sn})")
+                #         break
                 debug.log_warning(
                     f"{IND}[TIMEOUT] Esperando ack ({current_sn})")
 
@@ -129,12 +133,13 @@ class SelectiveRepeat(ProtocolARQ):
 
         end_segment_buffered = -1
         attempts = 0
-        while attempts < NUM_ATTEMPS:
+        while attempts < NUM_ATTEMPTS:
             try:
                 segment = self._recv_segment_sr()
                 if segment is None:
                     continue
                 seq_num, pkt_id, payload = segment
+                attempts = 0
 
                 if self.pkt_id != pkt_id:
                     self._send_ack_sr(seq_num, pkt_id)
@@ -194,7 +199,10 @@ class SelectiveRepeat(ProtocolARQ):
         pkt_id_b = pkt_id.to_bytes(2, byteorder='big')
         self.socket.sendto(syn_b + ack_b + pkt_id_b, self.address)
 
-    def _set_win_size(self, num_segments):
+    def set_win_size(self, win_size):
+        self.win_size = win_size
+
+    def _calculate_win_size(self, num_segments):
         half = num_segments // 2
         return min(MAX_WIN_SIZE, max(1, half))
 
@@ -217,3 +225,9 @@ class SelectiveRepeat(ProtocolARQ):
             del timers[exp]
 
         return expired_segments_sn
+
+    def _split_data(self, data: bytes):
+        data_chunks = []
+        for i in range(0, len(data), DATA_SEGMENT_SIZE):
+            data_chunks.append(data[i:i + DATA_SEGMENT_SIZE])
+        return data_chunks
