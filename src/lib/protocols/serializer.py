@@ -5,7 +5,7 @@ class Serializer:
     @staticmethod
     def bool_to_byte(flag: bool) -> bytes:
         """
-        Convierte un booleano a un byte:
+        Convert boolean to byte:
         True  → b'\x01'
         False → b'\x00'
         """
@@ -15,7 +15,7 @@ class Serializer:
     @staticmethod
     def byte_to_bool(b: bytes) -> bool:
         """
-        Convierte un byte de longitud 1 de vuelta a booleano:
+        Convert byte to boolean:
         b'\x01' → True
         b'\x00' → False
         """
@@ -24,7 +24,7 @@ class Serializer:
     @staticmethod
     def get_checksum_data(data: bytes) -> bytes:
         """
-        Encripta los datos usando XOR con una clave fija. Devuelve 4 bytes.
+        Encrypts the data using XOR with a fixed key. Returns 4 bytes.
         """
         crc = zlib.crc32(data) & 0xFFFFFFFF
         return crc.to_bytes(4, byteorder='big')

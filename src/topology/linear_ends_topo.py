@@ -25,8 +25,8 @@ class Router(Node):
         self.cmd("iptables -A OUTPUT -p icmp -j ACCEPT")
         self.cmd("iptables -A FORWARD -p icmp -j ACCEPT")
         self.cmd(
-            "iptables -I OUTPUT -p icmp --icmp-type fragmentation-needed -j ACCEPT"
-        )
+            "iptables -I OUTPUT -p icmp --icmp-type fragmentation-needed -j "
+            "ACCEPT")
 
     def terminate(self):
         self.cmd("sysctl -w net.ipv4.ip_forward=0")

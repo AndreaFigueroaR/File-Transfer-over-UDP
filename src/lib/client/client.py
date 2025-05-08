@@ -23,12 +23,16 @@ class Client:
 
     def upload(self, client_src, srv_file_name):
         print(
-            f"[INFO] Uploading file '{client_src}' as '{srv_file_name}' to {self.srv_addr[0]}:{self.srv_addr[1]} using protocol {self.prot_type}")
+            f"[INFO] Uploading file '{client_src}' as '{srv_file_name}' "
+            f"to {self.srv_addr[0]}:{self.srv_addr[1]} using protocol "
+            f"{self.prot_type}")
         self._start(client_src, srv_file_name, UPLOAD)
 
     def download(self, client_dst, srv_file_name):
         print(
-            f"[INFO] Downloading file '{srv_file_name}' from {self.srv_addr[0]}:{self.srv_addr[1]} using protocol {self.prot_type}")
+            f"[INFO] Downloading file '{srv_file_name}' from "
+            f"{self.srv_addr[0]}:{self.srv_addr[1]} using "
+            f"protocol {self.prot_type}")
         self._start(client_dst, srv_file_name, DOWNLOAD)
 
     def _start(self, client_file_path, srv_file_name, client_type):
@@ -88,22 +92,22 @@ class Client:
             data = file.read(FILE_CHUNK_SIZE)
             rdt.send(data)
             bytes_sended += len(data)
-            print(f"[FILE]: Data chunk bytes sended: {len(data)}")
+            print(f"[FILE] Data chunk bytes sended: {len(data)}")
             if not data:
                 break
         elapsed = time.time() - start
-        print(f"[FILE]: Total bytes sended {bytes_sended} in {elapsed:.3f} s")
+        print(f"[FILE] Total bytes sended {bytes_sended} in {elapsed:.3f} s")
 
     def _recv_file(self, rdt, file):
         start = time.time()
         bytes_received = 0
         while True:
             data = rdt.receive()
-            print(f"[FILE]: Data chunk bytes received: {len(data)}")
+            print(f"[FILE] Data chunk bytes received: {len(data)}")
             if not data:
                 break
             file.write(data)
             bytes_received += len(data)
         elapsed = time.time() - start
         print(
-            f"[FILE]: Total bytes received {bytes_received} in {elapsed:.3f} s")
+            f"[FILE] Total bytes received {bytes_received} in {elapsed:.3f} s")

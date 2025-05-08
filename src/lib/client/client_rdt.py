@@ -2,7 +2,7 @@ import socket
 from lib.handshake.client_handshaker import ClientHandshaker
 from lib.protocols.selective_repeat import SelectiveRepeat
 from lib.protocols.stop_and_wait import StopAndWait
-from lib.protocols.config import *
+from lib.protocols.config import TIMEOUT
 
 PROT_SR = "sr"
 

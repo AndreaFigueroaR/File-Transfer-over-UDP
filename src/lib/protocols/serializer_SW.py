@@ -1,7 +1,7 @@
-from lib.protocols.serializer import *
+from lib.protocols.serializer import Serializer
 from typing import Tuple
 import lib.debug as debug
-from lib.protocols.config import *
+from lib.protocols.config import SW_SEGMENT_HEADER_SIZE, SW_ACK_HEADER_SIZE
 
 
 class SerializerSW:
@@ -11,8 +11,8 @@ class SerializerSW:
         fin_byte = Serializer.bool_to_byte(is_fin)
         checksum_bytes = Serializer.get_checksum_data(data_segment)
         seq_num_byte = segment_sn.to_bytes(1, byteorder='big')
-
-        segment = syn_byte + fin_byte + checksum_bytes + seq_num_byte + data_segment
+        header = syn_byte + fin_byte + checksum_bytes + seq_num_byte
+        segment = header + data_segment
         return segment
 
     @staticmethod
@@ -27,7 +27,8 @@ class SerializerSW:
         checksum_calculated = Serializer.get_checksum_data(payload)
         if checksum_received != checksum_calculated:
             debug.log_warning(
-                f"Checksum mismatch: {checksum_received} != {checksum_calculated}")
+                f"Checksum mismatch: {checksum_received} != "
+                f"{checksum_calculated}")
             return None
         return is_fin, seq_num, payload
 

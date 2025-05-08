@@ -1,9 +1,12 @@
-from lib.protocols.protocol_arq import *
+from lib.protocols.protocol_arq import ProtocolARQ
+from lib.protocols.protocol_arq import IND, DELIM, DATA_SEGMENT_SIZE
 from typing import Optional, Tuple
 import socket
 import lib.debug as debug
-from lib.protocols.serializer_SW import *
-from lib.protocols.config import *
+from lib.protocols.serializer_SW import SerializerSW
+from lib.protocols.serializer import Serializer
+from lib.protocols.config import SW_SEGMENT_HEADER_SIZE, NUM_ATTEMPS
+from lib.protocols.config import SW_ACK_SIZE, SW_ACK_HEADER_SIZE, FIRST_SN
 
 
 class StopAndWait(ProtocolARQ):
@@ -18,7 +21,8 @@ class StopAndWait(ProtocolARQ):
     def _send_segment(self, segment_sn, data_segment: bytes, is_fin):
         debug.log(f"{IND}{DELIM}")
         debug.log(
-            f"{IND}Segment size to send: {SW_SEGMENT_HEADER_SIZE  + len(data_segment)}")
+            f"{IND}Segment size to send: "
+            f"{SW_SEGMENT_HEADER_SIZE + len(data_segment)}")
         segment = SerializerSW.serialize_segment(
             segment_sn, data_segment, is_fin)
         self.socket.sendto(segment, self.address)

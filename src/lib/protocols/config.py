@@ -1,12 +1,11 @@
 FIRST_SN = 0
 
-## BEST CONFIG WITHOUT DELAY
+# BEST CONFIG WITHOUT DELAY
 # [10% (5%/5%) Packet loss] config
 NUM_ATTEMPS = 20
 TIMEOUT = 0.01
 
-## CONFIG NEEDED WHEN DELAY SET
-
+# CONFIG NEEDED WHEN DELAY SET
 # [10% (5%/5%) Packet loss] + [5ms 2ms delay] config
 # NUM_ATTEMPS = 80
 # TIMEOUT = 0.1

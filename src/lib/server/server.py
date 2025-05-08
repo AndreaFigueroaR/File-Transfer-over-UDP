@@ -22,7 +22,8 @@ class Server:
         self.skt_listener = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.skt_listener.bind(self.addr)
         print(
-            f"[INFO] Server listening in IP: {host}, PORT:{port} using protocol {protocol}")
+            f"[INFO] Server listening in IP: {host}, PORT:{port} "
+            f"using protocol {protocol}")
 
         self.prot_type = protocol
         self.storage = storage
@@ -41,7 +42,8 @@ class Server:
                 client_data, client_addr = self.skt_listener.recvfrom(
                     TAM_BUFFER)
                 if client_addr not in self.clients:
-                    debug.log_result(f"[NEW CLIENT]: got request of conection of host: {client_addr}")
+                    debug.log_result(f"[NEW CLIENT]: got request of conection "
+                                     f"of host: {client_addr}")
                     client_thread = threading.Thread(
                         target=self._handle_client, args=(
                             client_data, client_addr))
@@ -70,7 +72,8 @@ class Server:
             app_data = rdt.meet_client(client_data, self.prot_type)
             client_type, srv_file_name = self.deserialize_app_data(app_data)
             self._dispatch_client(rdt, client_type, srv_file_name)
-            debug.log_result(f"Connection with client{client_addr} ended orderly")
+            debug.log_result(f"Connection with client {client_addr} "
+                             f"ended orderly")
 
         except ValueError as error:
             print(f"[ERROR]: {error}")
@@ -96,7 +99,6 @@ class Server:
         print("[INFO] File received")
 
     def _handle_client_download(self, rdt, srv_file_name):
-        # envio mensaje de hanshake vacio
         if not os.path.isfile(srv_file_name):
             raise FileNotFoundError(f"File {srv_file_name} does not exist.")
         with open(srv_file_name, READ_BINARY) as file:
@@ -108,14 +110,14 @@ class Server:
         bytes_received = 0
         while True:
             data = rdt.receive()
-            print(f"[FILE]: Data chunk bytes received: {len(data)}")
+            print(f"[FILE] Data chunk bytes received: {len(data)}")
             if not data:
                 break
             file.write(data)
             bytes_received += len(data)
         elapsed = time.time() - start
         print(
-            f"[FILE]: Total bytes received {bytes_received} in {elapsed:.3f} s")
+            f"[FILE] Total bytes received {bytes_received} in {elapsed:.3f} s")
 
     def _send_file(self, rdt, file):
         start = time.time()
@@ -129,7 +131,7 @@ class Server:
             rdt.send(data)
         rdt.send(bytes())
         elapsed = time.time() - start
-        print(f"[FILE]: Total bytes sended {bytes_sended} in {elapsed:.3f} s")
+        print(f"[FILE] Total bytes sended {bytes_sended} in {elapsed:.3f} s")
 
     def _clear(self):
         for client_addr in list(self.clients.keys()):

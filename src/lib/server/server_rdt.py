@@ -2,7 +2,7 @@ import socket
 from lib.handshake.server_handshaker import ServerHandshaker
 from lib.protocols.selective_repeat import SelectiveRepeat
 from lib.protocols.stop_and_wait import StopAndWait
-from lib.protocols.config import *
+from lib.protocols.config import TIMEOUT
 
 PROT_SR = "sr"
 
@@ -39,4 +39,5 @@ class ServerRDT:
     def _check_prot_type(self, client_prot_type, prot_type):
         if client_prot_type != prot_type:
             raise ValueError(
-                f"Invalid protocol type: {client_prot_type}. Expected {prot_type}")
+                f"Invalid protocol type: {client_prot_type}. "
+                f"Expected {prot_type}")

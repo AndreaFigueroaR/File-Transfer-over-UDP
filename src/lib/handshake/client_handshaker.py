@@ -1,5 +1,5 @@
 import socket
-from lib.handshake.serializer import *
+from lib.handshake.serializer import MessageSerializer
 TAM_BUFFER = 1024
 TIME_OUT = 0.1
 
@@ -24,18 +24,18 @@ class ClientHandshaker:
         return self.srv_addr
 
     def _send_innocent_mgs_3(self, skt, srv_num_seq):
-        packet = MessgageSerializer.third_msg_to_bytes(srv_num_seq)
+        packet = MessageSerializer.third_msg_to_bytes(srv_num_seq)
         skt.sendto(packet, self.srv_addr)
 
     def _send_msg_3(self, skt, srv_num_seq):
-        packet = MessgageSerializer.third_msg_to_bytes(srv_num_seq)
+        packet = MessageSerializer.third_msg_to_bytes(srv_num_seq)
 
         for _ in range(NUM_ATTEMPS):
             try:
                 skt.sendto(packet, self.srv_addr)
                 data, self.srv_addr = skt.recvfrom(TAM_BUFFER)
 
-                if not MessgageSerializer._is_about_handhshake(data):
+                if not MessageSerializer._is_about_handhshake(data):
                     return
 
             except socket.timeout:
@@ -44,7 +44,7 @@ class ClientHandshaker:
             "tried to reach the server several times without response")
 
     def _send_msg_1(self, skt, client_prot_type, app_metadata) -> int:
-        packet = MessgageSerializer.first_msg_to_bytes(
+        packet = MessageSerializer.first_msg_to_bytes(
             self.num_seq, client_prot_type, app_metadata)
 
         for _ in range(NUM_ATTEMPS):
@@ -53,12 +53,11 @@ class ClientHandshaker:
                 data_handshake, self.srv_addr = skt.recvfrom(TAM_BUFFER)
             except socket.timeout:
                 continue
-            if not MessgageSerializer._is_about_handhshake(data_handshake):
-                # no sé qué hacer, no debería de pasar a no ser que sea un
-                # ataque
-                assert False, "[Error]: recevie a message not expected at handshake, please retry"
+            if not MessageSerializer._is_about_handhshake(data_handshake):
+                # This should not happen
+                assert False, "[Error]: message not expected at handshake"
 
-            srv_num_seq, ack = MessgageSerializer.second_msg_from_bytes(
+            srv_num_seq, ack = MessageSerializer.second_msg_from_bytes(
                 data_handshake)
 
             if self.num_seq == ack:

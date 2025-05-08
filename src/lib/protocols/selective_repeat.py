@@ -1,9 +1,11 @@
-from lib.protocols.protocol_arq import *
+from lib.protocols.protocol_arq import ProtocolARQ
+from lib.protocols.protocol_arq import IND, DELIM, DATA_SEGMENT_SIZE
 import time
 import socket
 from lib import debug
 from lib.protocols.serializer import Serializer
-from lib.protocols.config import *
+from lib.protocols.config import NUM_ATTEMPS, TIMEOUT
+from lib.protocols.config import SR_SEGMENT_HEADER_SIZE, MAX_WIN_SIZE
 
 
 class SelectiveRepeat(ProtocolARQ):
@@ -14,13 +16,15 @@ class SelectiveRepeat(ProtocolARQ):
     def _send_segment_sr(self, segment_sn, pkt_id, data_segment: bytes):
         debug.log(f"{IND}{DELIM}")
         debug.log(
-            f"{IND}Segment size to send: {SR_SEGMENT_HEADER_SIZE + len(data_segment)}")
+            f"{IND}Segment size to send: "
+            f"{SR_SEGMENT_HEADER_SIZE + len(data_segment)}")
 
         syn_byte = Serializer.bool_to_byte(False)
         checksum_bytes = Serializer.get_checksum_data(data_segment)
         seq_num_byte = segment_sn.to_bytes(1, byteorder='big')
         pkt_id_byte = pkt_id.to_bytes(2, byteorder='big')
-        segment = syn_byte + checksum_bytes + seq_num_byte + pkt_id_byte + data_segment
+        header = syn_byte + checksum_bytes + seq_num_byte + pkt_id_byte
+        segment = header + data_segment
         self.socket.sendto(segment, self.address)
 
     def _recv_ack_sr(self):
@@ -77,8 +81,8 @@ class SelectiveRepeat(ProtocolARQ):
                 if current_sn == len(data_segments) - 1:
                     attempts += 1
                     if (attempts == NUM_ATTEMPS):
-                        debug.log_warning(
-                            f"{IND}[TIMEOUT] Esperando ack de FIN ({current_sn})")
+                        debug.log_warning(f"{IND}[TIMEOUT] Esperando ack "
+                                          f"de FIN ({current_sn})")
                         break
                 debug.log_warning(
                     f"{IND}[TIMEOUT] Esperando ack ({current_sn})")
@@ -110,7 +114,8 @@ class SelectiveRepeat(ProtocolARQ):
         checksum_calculated = Serializer.get_checksum_data(payload)
         if checksum_received != checksum_calculated:
             debug.log_warning(
-                f"Checksum mismatch: {checksum_received} != {checksum_calculated}")
+                f"Checksum mismatch: {checksum_received} != "
+                f"{checksum_calculated}")
             return None
 
         debug.log(DELIM)
@@ -131,11 +136,12 @@ class SelectiveRepeat(ProtocolARQ):
                     continue
                 seq_num, pkt_id, payload = segment
 
-                # attempts = 0
                 if self.pkt_id != pkt_id:
                     self._send_ack_sr(seq_num, pkt_id)
                     debug.log_warning(
-                        f"{IND}ME LLEGO UN PAQUETE ANTERIOR, CURRENT_PKG: {self.pkt_id}. REC > PKG:{pkt_id}, SEQ:{seq_num}, LEN_PAYLOAD: {len(payload)}")
+                        f"{IND}Received a previous package. "
+                        f"CURRENT_PKG: {self.pkt_id}. REC > PKG:{pkt_id}, "
+                        f"SEQ:{seq_num}, LEN_PAYLOAD: {len(payload)}")
                     continue
 
                 debug.log(f"{IND}Sequence number expected: {expected_sn}")
@@ -151,7 +157,8 @@ class SelectiveRepeat(ProtocolARQ):
                         if len(payload) == 0:
                             end_segment_buffered = seq_num
                     debug.log_warning(
-                        f"{IND}Received out of order sequence number. Buffered (if was not).")
+                        f"{IND}Received out of order sequence number. "
+                        f"Buffered (if was not).")
                     self._send_ack_sr(seq_num, pkt_id)
                 else:
                     debug.log(f"{IND}Received expected sequence number.")
@@ -177,7 +184,7 @@ class SelectiveRepeat(ProtocolARQ):
                 debug.log_error(f"{IND}[ERROR]: Timeout")
                 attempts += 1
 
-        debug.log_warning(f"{IND}CORTO POR ATTEMPTS")
+        debug.log_warning(f"{IND}MAXIMUM NUMBER OF ATTEMPS REACHED.")
         self.pkt_id += 1
         return data
 
@@ -188,9 +195,8 @@ class SelectiveRepeat(ProtocolARQ):
         self.socket.sendto(syn_b + ack_b + pkt_id_b, self.address)
 
     def _set_win_size(self, num_segments):
-        return min(MAX_WIN_SIZE, num_segments)
-        # half = num_segments // 2
-        # return min(MAX_WIN_SIZE, max(1, half))
+        half = num_segments // 2
+        return min(MAX_WIN_SIZE, max(1, half))
 
     def _update_current_sn(self, ack_received, ack_buffer):
         current_sn = ack_received + 1

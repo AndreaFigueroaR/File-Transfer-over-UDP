@@ -1,5 +1,5 @@
 import socket
-from lib.handshake.serializer import *
+from lib.handshake.serializer import MessageSerializer
 TAM_BUFFER = 1024
 
 STOP_ADN_WAIT = 'sw'
@@ -13,17 +13,17 @@ class ServerHandshaker:
         self.num_seq = 0
 
     def handshake(self, client_data, skt_peer):
-        syn, client_num_seq, client_prot_type, client_app_metadata = MessgageSerializer.first_msg_from_bytes(
-            client_data)
+        first_msg = MessageSerializer.first_msg_from_bytes(client_data)
+        syn, client_num_seq, client_prot_type, client_app_metadata = first_msg
         if not syn:
-            print("[Error]: recevie a message not expected at handshake, please retry")
+            print("[Error]: message not expected at handshake")
 
         self._check_prot_type(client_prot_type)
         self._send_msg_2(skt_peer, client_num_seq)
         return client_prot_type, client_app_metadata
 
     def _send_msg_2(self, skt_peer, client_num_seq) -> int:
-        packet = MessgageSerializer.second_msg_to_bytes(
+        packet = MessageSerializer.second_msg_to_bytes(
             self.num_seq, client_num_seq)
         for _ in range(NUM_ATTEMPS):
             try:
@@ -32,12 +32,12 @@ class ServerHandshaker:
             except socket.timeout:
                 continue
 
-            if not MessgageSerializer._is_about_handhshake(
+            if not MessageSerializer._is_about_handhshake(
                     client_data):  # not syn
                 return
 
-            # if it is a corrupted message, it ask for the ack again
-            _, ack = MessgageSerializer.third_msg_from_bytes(client_data)
+            # If it is a corrupted message, ask for the ack again
+            _, ack = MessageSerializer.third_msg_from_bytes(client_data)
             if self.num_seq == ack:
                 return
 
@@ -48,4 +48,4 @@ class ServerHandshaker:
         if not (client_prot_type ==
                 STOP_ADN_WAIT or client_prot_type == SELECTIVE_REPEAT):
             raise ValueError(
-                f"[Client] Invalid client protocol type, received: {client_prot_type}. Not a valid selection")
+                f"[Client] Invalid client protocol type: {client_prot_type}.")
