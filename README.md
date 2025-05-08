@@ -30,9 +30,13 @@ Introducción a los Sistemas Distribuidos (1c-2025)
  Las operaciones de utilidad para clientes del servidor son:
 -  **upload**: Transferencia de un archivo del cliente hacia el servidor
 -  **download**: Transferencia de un archivo del servidor hacia el cliente
-Para la concretización de estas mismas se implementó un protocolo de aplicación básico que especifica los mensajes intercambiados entre los distintos procesos así como un Reliable Data Transfer sobre un medio Un-Reliable (protocolo de transporte UDP).
+Para la concretización de estas mismas se implementó un protocolo de aplicación básico que especifica los mensajes intercambiados entre los distintos procesos mediante su Reliable Data Transfer (RDT) construido sobre un medio Un-Reliable (protocolo de transporte UDP).
 
- Además se usó la herramienta _mininet_ para virtualmente simular redes (a nivel capa de Red y capa de Enlace) y distintas condiciones sobre estas con la finalidad de poder proveer garantías sobre la **confiabilidad** de la comunicación.
+ Además se usaron distintas herramientas para hacer un análisis más abarcativo. Entre estas están:
+ - _mininet_, herramienta que nos permite simular redes virtualmente (a nivel capa de Red y capa de Enlace) y distintas condiciones sobre estas con la finalidad de poder proveer garantías sobre la **confiabilidad** que ofrecen los RDTs implementados.
+ - _miniedit_, aplicacion con interfaz gráfica que provee mininet para el diseño y configuración de redes virtuales de forma intuitiva.
+ - google collab para la generación de gráficos que permitan analizar la salida de los programas (tiempo de transferencia, timeouts, etc) así como el tráfico generado en la red virtual,  y principalmente elo contraste de performance entre selective repeat y stop and wait.
+ 
 
 ## Ejecución
 
@@ -105,25 +109,11 @@ python3 download.py -H <host> -p <port_number> -n archivo.txt -d /path/recibido.
 ## Simulación de topología de Red: Mininet
 Para poder testear el reliable data transfer desarrollado en diferentes topologías de red se usó la herramienta _mininet_, para lo cual puede abrir una terminal y ejecutar:
 ``` bash
-pip install mininet
+sudo apt install mininet
 ```
-Hecho esto dentro del subdirectorio `\File-Transfer-over-UDP\src\topology` se podrán encontrar programas que se encargan de configurar diferentes topologías de red con diferentes características cada una. 
+Hecho esto dentro del subdirectorio `\File-Transfer-over-UDP\src\topology` se podrán encontrar programas que se encargan de configurarla topología lineal requerida. 
 
-Para ejecutar el programa sobre estas topologías virtuales se necesitará primero _levantar_ la red virtual deseada ejecutando su respectivo programa como `sudo`. Por ejemplo, si se quiere probar sobre la topología `basic_lossy_net` (que consiste en una red pequeña con 2 hosts y con pérdida de paquetes del 10%) se deberá ejecutar:
-``` bash
-sudo python3 basic_lossy_net.py
-```
-El programa, después de establecer la red virtual abrirá en su terminal la interfaz por linea de comando de mininet que le permitirá interactuar con dicha topología por ejemplo ejecutando commandos y/o programas en los sitemas terminales (hosts). En nuestro caso nos interesa ejecutar en un host l apalicación del servidor y en otro una aplicación de cliente (download o upload):
-
-``` bash
-mininet> host_2 python3 ..\start-server.py <args>
-```
-ejecuta los programas con los flags como indica la documentación de los programas. 
-Ten en cuenta que :
-- Los hosts que defininste en la red virtual teienen "montado" tu file system local
-- Si usas rutas relativas la ruta esolverá desde el directorio raiz (lo mismo que siempre tener que poner rutas absolutas).
-Además:
-- No uses en dos hosts distintos mismos puertos
+Para probar programas sobre alguna topología virtual se puede usar tanto la interfaz gráfica que miniedit proporciona como comandos de mininet que proporcionan redes prediseñadas y también scripts de python que usen la API de mininet para configurar una red virtual.Una vez levantada la red virtual se podrán abrir terminales de cada host y ejecutar diferentes programas, es en este escenario que se probó nuestro sistema de transferencia de archivos sobre diferentes topologías detalladas en el informe.
 
 ## Fuentes
 
