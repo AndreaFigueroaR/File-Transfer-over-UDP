@@ -1,13 +1,6 @@
-# BEST CONFIG WITHOUT DELAY
-# [10% (5%/5%) Packet loss] config
-# NUM_ATTEMPTS = 20
 MAX_WIN_SIZE = 4
-# TIMEOUT = 0.01
-
-# CONFIG NEEDED WHEN DELAY SET
-# [10% (5%/5%) Packet loss] + [5ms 2ms delay] config
-# NUM_ATTEMPS = 80
 NUM_ATTEMPTS = 30
+
 TIMEOUT = 0.1 # base
 MAX_TIME_OUT= 0.8
 
