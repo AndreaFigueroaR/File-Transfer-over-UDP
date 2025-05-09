@@ -39,7 +39,7 @@ Para la concretización de estas mismas se implementó un protocolo de aplicaci�
 ### Servidor
 
 ``` bash
-start_server.py [-h] [-v | -q] [-H HOST] [-p PORT] [-r {sr,sw}] [-s STORAGE]
+start-server.py [-h] [-v | -q] [-H HOST] [-p PORT] [-r {sr,sw}] [-s STORAGE]
 ```
 
 | Opción | Descripción |
@@ -100,6 +100,24 @@ Ejemplo para hacer download de un archivo `archivo.txt` que se desea guardar com
 
 ```bash
 python3 download.py -H <host> -p <port_number> -n archivo.txt -d /path/recibido.txt
+```
+## Ejemplo ejecución local
+- Servidor
+```bash
+python3 start-server.py -H 127.0.0.1 -p 12345 -r sr -v
+```
+- Cliente Upload
+```bash
+python3 upload.py -H 127.0.0.1 -p 12345 -n resultado_upload.bin -s test_cases/crecimiento_cte/1MB.bin -r sr -v 
+```
+## Ejemplo de ejecución con red virtual simulada 
+- Servidor: Ejecutar en el host 1
+```bash
+python3 start-server.py -H 10.0.0.1 -p 12345 -r sr -v
+```
+- Cliente Upload: Ejecutar en el host n
+```bash
+python3 upload.py -H 127.0.0.1 -p 12345 -n resultado_upload.bin -s test_cases/crecimiento_cte/1MB.bin -r sr -v 
 ```
 
 ## Simulación de topología de Red: Mininet
