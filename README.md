@@ -133,6 +133,8 @@ Hecho esto dentro del subdirectorio `\File-Transfer-over-UDP\src\topology` se po
 
 Para probar programas sobre alguna topología virtual se puede usar tanto la interfaz gráfica que miniedit proporciona como comandos de mininet que proporcionan redes prediseñadas y también scripts de python que usen la API de mininet para configurar una red virtual.Una vez levantada la red virtual se podrán abrir terminales de cada host y ejecutar diferentes programas, es en este escenario que se probó nuestro sistema de transferencia de archivos sobre diferentes topologías detalladas en el informe.
 
+Video con demostración del desempeño con topología con delay, jitter, packetloss y atención concurrente a multiples clientes. [Link video en YouTube](https://youtu.be/nVHvyXWkkuE)
+
 ## Fuentes
 
 La topología de red para la fragmentación y el packet loss fue tomada del repositorio [LinearEnds topology use](https://github.com/gabrieldiem/linear-ends-topology-with-ip-frag).
