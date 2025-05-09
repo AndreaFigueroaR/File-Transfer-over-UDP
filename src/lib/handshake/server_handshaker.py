@@ -1,10 +1,12 @@
 import socket
 from lib.handshake.serializer import MessageSerializer
+from lib.utils.timeout_estimator import reconsider_timeout
+
 TAM_BUFFER = 1024
 
 STOP_ADN_WAIT = 'sw'
 SELECTIVE_REPEAT = 'sr'
-NUM_ATTEMPS = 10
+NUM_ATTEMPS_HANDHAKE = 15
 
 
 class ServerHandshaker:
@@ -25,11 +27,12 @@ class ServerHandshaker:
     def _send_msg_2(self, skt_peer, client_num_seq) -> int:
         packet = MessageSerializer.second_msg_to_bytes(
             self.num_seq, client_num_seq)
-        for _ in range(NUM_ATTEMPS):
+        for _ in range(NUM_ATTEMPS_HANDHAKE):
             try:
                 skt_peer.sendto(packet, self.client_addr)
                 client_data, self.client_addr = skt_peer.recvfrom(TAM_BUFFER)
             except socket.timeout:
+                reconsider_timeout(skt_peer)
                 continue
 
             if not MessageSerializer._is_about_handhshake(

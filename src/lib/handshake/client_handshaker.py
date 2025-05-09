@@ -1,12 +1,12 @@
 import socket
 from lib.handshake.serializer import MessageSerializer
+from lib.utils.timeout_estimator import reconsider_timeout
+
 TAM_BUFFER = 1024
-TIME_OUT = 0.1
 
 UPLOAD = 'U'
 DOWNLOAD = 'D'
-NUM_ATTEMPS = 10
-
+NUM_ATTEMPS_HANDSHAKE = 15
 
 class ClientHandshaker:
     def __init__(self, addr):
@@ -30,7 +30,7 @@ class ClientHandshaker:
     def _send_msg_3(self, skt, srv_num_seq):
         packet = MessageSerializer.third_msg_to_bytes(srv_num_seq)
 
-        for _ in range(NUM_ATTEMPS):
+        for _ in range(NUM_ATTEMPS_HANDSHAKE):
             try:
                 skt.sendto(packet, self.srv_addr)
                 data, self.srv_addr = skt.recvfrom(TAM_BUFFER)
@@ -39,6 +39,7 @@ class ClientHandshaker:
                     return
 
             except socket.timeout:
+                reconsider_timeout(skt)
                 continue
         raise ConnectionError(
             "tried to reach the server several times without response")
@@ -47,11 +48,12 @@ class ClientHandshaker:
         packet = MessageSerializer.first_msg_to_bytes(
             self.num_seq, client_prot_type, app_metadata)
 
-        for _ in range(NUM_ATTEMPS):
+        for _ in range(NUM_ATTEMPS_HANDSHAKE):
             try:
                 skt.sendto(packet, self.srv_addr)
                 data_handshake, self.srv_addr = skt.recvfrom(TAM_BUFFER)
             except socket.timeout:
+                reconsider_timeout(skt)
                 continue
             if not MessageSerializer._is_about_handhshake(data_handshake):
                 # This should not happen

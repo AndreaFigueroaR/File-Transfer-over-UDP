@@ -15,13 +15,6 @@ cmp -l test_cases/1000_bytes_unos.bin upload_1000_bytes_unos.bin
 ```
 ## Generación de archivos de prueba
 
-### Escritura de bloques de 1024 bytes de ceros 
-Desde la terminal
-```bash
-dd if=/dev/zero of=nombre-arch.bin bs=1 count=1024
-```
-en este caso, solo se escirbe 1 bloque
-
 ### Escritura de bloques de n bytes (donde todos los bits son 1)
 ```bash
 yes $'\xFF' | head -c 1024 > archivo_lleno_de_unos.bin
