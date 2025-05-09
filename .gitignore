@@ -1,0 +1,7 @@
+# Ignorar TODOS los __pycache__ y archivos de bytecode
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignorar directorio storage (si no debe subirse)
+src/storage/

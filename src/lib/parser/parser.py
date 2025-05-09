@@ -1,15 +1,14 @@
 import argparse
 
-# Contantes de descripción
+# Description cons
 DESC_SERVER = "File Transfer Server."
 DESC_DOWNLOAD = "File Transfer Download."
 DESC_UPLOAD = "File Transfer Upload."
 
-# Constantes de paths para guardar archivos
-STORAGE_SERVER = './storage/server/'
+# Paths cons
+STORAGE_SERVER = './storage/upload/'
 STORAGE_DOWNLOAD = './storage/download/'
 
-# Constantes de IP y port de Server
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 9000
 
@@ -31,9 +30,7 @@ def parse_server():
 
 def parser_commons(description: str):
     parser = argparse.ArgumentParser(description=description)
-    # commons parsers:
 
-    # Para usar sólo uno de los dos. No ambos al ismo tiempo
     verbosity = parser.add_mutually_exclusive_group()
     verbosity.add_argument("-v", "--verbose",
                            action="store_true",
@@ -52,7 +49,6 @@ def parser_commons(description: str):
                         default=SERVER_PORT,
                         help="service port")
 
-# TODO debe ser excluyente el protocolo de transporte a utilizar
     parser.add_argument("-r", "--protocol",
                         choices=[SELECTIVE_REPEAT, STOP_AND_WAIT],
                         default=STOP_AND_WAIT,
@@ -65,7 +61,6 @@ def parse_upload():
     parser = parser_commons(DESC_UPLOAD)
     parser = parse_common_for_client(parser)
 
-    # indica al cliente qué archivo local debe subir al servidor.
     parser.add_argument(
         "-s",
         "--src",
@@ -80,7 +75,6 @@ def parse_download():
     parser = parser_commons(DESC_DOWNLOAD)
     parser = parse_common_for_client(parser)
 
-    # indica al cliente donde guardar archivo
     parser.add_argument(
         "-d",
         "--dst",
@@ -97,6 +91,6 @@ def parse_common_for_client(parser: argparse.ArgumentParser):
         dest="name",
         required=True,
         metavar="FILENAME",
-        help="name of the file to request to the server"
+        help="file name"
     )
     return parser

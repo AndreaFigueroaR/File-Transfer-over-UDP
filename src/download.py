@@ -1,22 +1,14 @@
 from lib.parser import parser
-from lib.client import Client
+from lib.client.client import Client
+import lib.debug as debug
 
 
-def main(args):
+def main():
     args = parser.parse_download()
-    display_mode(args)
-
+    is_verbose = True if args.verbose else False
+    debug.verbose = is_verbose
     client = Client(args.host, args.port, args.protocol)
-    client.download(args.src)
-
-
-def display_mode(args):
-    if args.verbose:
-        print("[INFO] Verbose mode ON")
-    elif args.quiet:
-        print("[INFO] Quiet mode ON")
-    print(
-        f"[INFO] Downloading file '{args.name}' from {args.host}:{args.port} using protocol {args.protocol}")
+    client.download(args.dst, args.name)
 
 
 if __name__ == "__main__":
