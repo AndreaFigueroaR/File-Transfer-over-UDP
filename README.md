@@ -135,6 +135,9 @@ Para probar programas sobre alguna topología virtual se puede usar tanto la int
 
 Video con demostración del desempeño con topología con delay, jitter, packetloss y atención concurrente a multiples clientes. [Link video en YouTube](https://youtu.be/nVHvyXWkkuE)
 
+## Analisis comparativo del performance: Selective repeat vs Stop and wait
+
+Generacióm de gráficos y análisis obtenidos [aquí](https://colab.research.google.com/drive/1LgZ7hATnLZKK5LoiN2qc_Zeut_2C-e6b?usp=sharing)
 ## Fuentes
 
 La topología de red para la fragmentación y el packet loss fue tomada del repositorio [LinearEnds topology use](https://github.com/gabrieldiem/linear-ends-topology-with-ip-frag).
