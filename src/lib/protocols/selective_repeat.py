@@ -82,12 +82,12 @@ class SelectiveRepeat:
                     total_sent += len(data_segments[ack])
                     del timers[ack]
             except socket.timeout:
-                attempts += 1
-                # if current_sn == len(data_segments) - 1:
-                #     if (attempts == NUM_ATTEMPTS):
-                #         debug.log_warning(f"{IND}[TIMEOUT] Esperando ack "
-                #                           f"de FIN ({current_sn})")
-                #         break
+                if current_sn == len(data_segments) - 1:
+                    attempts += 1
+                    if (attempts == NUM_ATTEMPS):
+                        debug.log_warning(f"{IND}[TIMEOUT] Esperando ack "
+                                          f"de FIN ({current_sn})")
+                        break
                 debug.log_warning(
                     f"{IND}[TIMEOUT] Esperando ack ({current_sn})")
 
